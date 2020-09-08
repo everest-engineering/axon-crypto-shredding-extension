@@ -1,0 +1,75 @@
+plugins {
+    id 'com.palantir.git-version' version '0.12.3'
+    id 'com.jfrog.bintray' version '1.8.4'
+    id 'idea'
+    id 'io.freefair.lombok' version '5.1.1'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+apply plugin: 'io.freefair.lombok'
+
+group = 'engineering.everest.starterkit'
+sourceCompatibility = '1.11'
+version gitVersion()
+
+repositories {
+    mavenCentral()
+}
+
+test {
+    useJUnitPlatform()
+}
+
+lombok {
+    version = '1.18.12'
+    generateLombokConfig.enabled = false
+}
+
+ext {
+    axonVersion = '4.4.2'
+    jacksonVersion = '2.11.2'
+    springBootVersion = '2.3.3.RELEASE'
+
+    junitVersion = '5.6.2'
+    mockitoVersion = '3.5.0'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-dependencies:${springBootVersion}"
+    }
+}
+
+dependencies {
+    implementation "org.axonframework:axon-modelling:${axonVersion}"
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publications = ['maven']
+    pkg {
+        repo = 'starterkit'
+        name = rootProject.name
+        userOrg = 'everestengineering'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/everestengineering/starterkit-axon-crypto-shredding-extension'
+    }
+    publish = true
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
