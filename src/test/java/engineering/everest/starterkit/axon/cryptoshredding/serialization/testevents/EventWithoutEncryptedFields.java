@@ -1,4 +1,4 @@
-package engineering.everest.starterkit.axon.cryptoshredding.serialization;
+package engineering.everest.starterkit.axon.cryptoshredding.serialization.testevents;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +11,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-class EventWithoutEncryptedFields {
+public class EventWithoutEncryptedFields {
 
     public static EventWithoutEncryptedFields createTestInstance() {
         return new EventWithoutEncryptedFields(
@@ -33,5 +33,4 @@ class EventWithoutEncryptedFields {
     private Long aLongField;
     private Integer anIntegerField;
     private byte[] aByteArrayField;
-
 }

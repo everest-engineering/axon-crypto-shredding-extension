@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.crypto.SecretKey;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -14,7 +15,7 @@ import javax.persistence.Id;
 public class PersistableEncryptionKey {
     @Id
     private String id;
-    private String key;
+    private SecretKey key;
 }
 
 
