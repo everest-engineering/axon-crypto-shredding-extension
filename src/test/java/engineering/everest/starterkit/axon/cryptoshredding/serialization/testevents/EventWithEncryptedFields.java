@@ -33,6 +33,13 @@ public class EventWithEncryptedFields {
                 .build();
     }
 
+    public static EventWithEncryptedFields createUnencryptedTestInstance() {
+        return EventWithEncryptedFields.builder()
+                .keyIdentifier("key-identifier")
+                .cleartextNestedClass(new NestedClass(null, Map.of("like", "bananas", "dislike", "lychees")))
+                .build();
+    }
+
     @EncryptionKeyIdentifier
     private String keyIdentifier;
     @EncryptedField
@@ -58,6 +65,4 @@ public class EventWithEncryptedFields {
     @EncryptedField
     private NestedClass encryptedNestedClass;
     private NestedClass cleartextNestedClass;
-
-    // TODO: handling of annotations in nested structures can come later
 }

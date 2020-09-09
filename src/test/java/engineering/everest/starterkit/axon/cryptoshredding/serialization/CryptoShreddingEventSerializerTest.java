@@ -132,11 +132,16 @@ class CryptoShreddingEventSerializerTest {
 
     @Test
     void deserialize_WillReplaceEncryptedFieldsWithDefaultValues_WhenEncryptionKeyHasBeenDeleted() {
-        // TODO: also, make language consistent - secret key rather than encryption key
+        when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.empty());
+        when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
+
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
+        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), String.class,
+                new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
+        EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+        assertEquals(EventWithEncryptedFields.createUnencryptedTestInstance(), deserialized);
     }
-
-    // TODO enable field level configuration to let the annotation specify what the missing value should be
-
 
     @Test
     void deserialize_WillFail_WhenEncryptionKeyIdentifierFieldHasBeenDeletedOrRenamedInSerializedForm() {

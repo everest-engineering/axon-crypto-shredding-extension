@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.google.common.base.Defaults.defaultValue;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -77,10 +78,10 @@ public class CryptoShreddingEventSerializer implements Serializer {
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(encryptedMappedObject);
         var optionalEncryptionKey = retrieveEncryptionKeyForDeserialization(encryptedMappedObject, serializedFieldNameMapping, fields);
 
-        var decryptedMappedObject = optionalEncryptionKey
+        var mappedObject = optionalEncryptionKey
                 .map(secretKey -> decryptAnnotatedFields(encryptedMappedObject, serializedFieldNameMapping, encryptedFields, secretKey))
-                .orElse(null); // TODO - replace annotated fields with defaults
-        return (T) objectMapper.convertValue(decryptedMappedObject, classToDeserialize);
+                .orElseGet(() -> applyEncryptedFieldDefaults(encryptedMappedObject, serializedFieldNameMapping, encryptedFields));
+        return (T) objectMapper.convertValue(mappedObject, classToDeserialize);
     }
 
     @Override
@@ -189,6 +190,17 @@ public class CryptoShreddingEventSerializer implements Serializer {
             var deserializedFieldValue = wrappedSerializer.deserialize(
                     new SimpleSerializedObject<>(cleartextSerializedFieldValue, String.class, Object.class.getCanonicalName(), null));
             encryptedMappedObject.put(serializedFieldKey, deserializedFieldValue);
+        });
+
+        return encryptedMappedObject;
+    }
+
+    private Map<String, Object> applyEncryptedFieldDefaults(Map<String, Object> encryptedMappedObject,
+                                                            Map<String, String> serializedFieldNameMapping,
+                                                            List<Field> encryptedFields) {
+        encryptedFields.forEach(field -> {
+            var serializedFieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
+            encryptedMappedObject.put(serializedFieldKey, defaultValue(field.getType()));
         });
 
         return encryptedMappedObject;

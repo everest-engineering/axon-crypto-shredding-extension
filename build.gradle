@@ -29,6 +29,7 @@ lombok {
 
 ext {
     axonVersion = '4.4.2'
+    guavaVersion = '29.0-jre'
     jacksonVersion = '2.11.2'
     springBootVersion = '2.3.3.RELEASE'
 
@@ -46,6 +47,7 @@ dependencies {
     implementation "org.axonframework:axon-modelling:${axonVersion}"
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation "com.google.guava:guava:${guavaVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
