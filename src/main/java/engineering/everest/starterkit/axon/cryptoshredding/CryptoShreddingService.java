@@ -3,7 +3,7 @@ package engineering.everest.starterkit.axon.cryptoshredding;
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesKeyGenerator;
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.Base64EncodingAesEncrypter;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
-import engineering.everest.starterkit.axon.cryptoshredding.persistence.EncryptionKeyRepository;
+import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -12,40 +12,40 @@ import java.util.Optional;
 @Component
 public class CryptoShreddingService {
 
-    private final EncryptionKeyRepository encryptionKeyRepository;
-    private final AesKeyGenerator encryptionKeyGenerator;
+    private final SecretKeyRepository secretKeyRepository;
+    private final AesKeyGenerator secretKeyGenerator;
 
-    public CryptoShreddingService(EncryptionKeyRepository encryptionKeyRepository, AesKeyGenerator encryptionKeyGenerator) {
-        this.encryptionKeyRepository = encryptionKeyRepository;
-        this.encryptionKeyGenerator = encryptionKeyGenerator;
+    public CryptoShreddingService(SecretKeyRepository secretKeyRepository, AesKeyGenerator secretKeyGenerator) {
+        this.secretKeyRepository = secretKeyRepository;
+        this.secretKeyGenerator = secretKeyGenerator;
     }
 
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(String keyId) {
-        var optionalEncryptionKey = encryptionKeyRepository.findById(keyId);
-        var encryptionKey = optionalEncryptionKey.isEmpty()
-                ? encryptionKeyRepository.create(keyId, encryptionKeyGenerator.generateKey())
-                : optionalEncryptionKey.get().getKey();
-        return Optional.ofNullable(encryptionKey);
+        var optionalSecretKey = secretKeyRepository.findById(keyId);
+        var secretKey = optionalSecretKey.isEmpty()
+                ? secretKeyRepository.create(keyId, secretKeyGenerator.generateKey())
+                : optionalSecretKey.get().getKey();
+        return Optional.ofNullable(secretKey);
     }
 
     public Optional<SecretKey> getExistingSecretKey(String keyId) {
-        var optionalPersistableEncryptionKey = encryptionKeyRepository.findById(keyId);
-        var encryptionKey = optionalPersistableEncryptionKey
+        var optionalPersistableEncryptionKey = secretKeyRepository.findById(keyId);
+        var secretKey = optionalPersistableEncryptionKey
                 .orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId))
                 .getKey();
 
-        return Optional.ofNullable(encryptionKey);
+        return Optional.ofNullable(secretKey);
     }
 
-    public Base64EncodingAesEncrypter createEncrypter(SecretKey encryptionKey) {
+    public Base64EncodingAesEncrypter createEncrypter(SecretKey secretKey) {
         return new Base64EncodingAesEncrypter(); // TODO
     }
 
-    public Base64EncodingAesEncrypter createDecrypter(SecretKey encryptionKey) {
+    public Base64EncodingAesEncrypter createDecrypter(SecretKey secretKey) {
         return new Base64EncodingAesEncrypter(); // TODO
     }
 
-    public void deleteEncryptionKey(String keyType, String keyId) {
+    public void deleteSecretKey(String keyType, String keyId) {
         // TODO
     }
 }

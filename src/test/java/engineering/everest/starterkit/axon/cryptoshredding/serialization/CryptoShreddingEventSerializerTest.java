@@ -8,7 +8,7 @@ import engineering.everest.starterkit.axon.cryptoshredding.exceptions.Encryption
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
-import engineering.everest.starterkit.axon.cryptoshredding.persistence.EncryptionKeyRepository;
+import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
 import engineering.everest.starterkit.axon.cryptoshredding.serialization.testevents.EventWithEncryptedFields;
 import engineering.everest.starterkit.axon.cryptoshredding.serialization.testevents.EventWithMissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.starterkit.axon.cryptoshredding.serialization.testevents.EventWithUnsupportedEncryptionKeyIdentifierType;
@@ -52,7 +52,7 @@ class CryptoShreddingEventSerializerTest {
     @Mock
     private Serializer mockWrappedSerializer;
     @Mock
-    private EncryptionKeyRepository encryptionKeyRepository;
+    private SecretKeyRepository secretKeyRepository;
     @Mock
     private Base64EncodingAesEncrypter base64EncodingAesEncrypter;
     @Mock
@@ -101,7 +101,7 @@ class CryptoShreddingEventSerializerTest {
         var serializedObject = new SimpleSerializedObject<>(EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON, String.class, new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), jsonCryptoShreddingEventSerializer.deserialize(serializedObject));
-        verify(encryptionKeyRepository, never()).findById(anyString());
+        verify(secretKeyRepository, never()).findById(anyString());
     }
 
     @Test
@@ -113,7 +113,7 @@ class CryptoShreddingEventSerializerTest {
                 new SimpleSerializedObject<>(serializedEvent.getData(), String.class, serializedType));
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), deserialized);
-        verify(encryptionKeyRepository, never()).findById(anyString());
+        verify(secretKeyRepository, never()).findById(anyString());
     }
 
     @Test
