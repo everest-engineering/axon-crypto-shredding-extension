@@ -9,13 +9,13 @@ import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEnc
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import lombok.extern.log4j.Log4j2;
+import org.axonframework.common.ObjectUtils;
 import org.axonframework.serialization.Converter;
 import org.axonframework.serialization.SerializedObject;
 import org.axonframework.serialization.SerializedType;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.SimpleSerializedObject;
 import org.axonframework.serialization.SimpleSerializedType;
-import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.lang.reflect.Field;
@@ -29,7 +29,6 @@ import static com.google.common.base.Defaults.defaultValue;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
-@Component
 @Log4j2
 public class CryptoShreddingEventSerializer implements Serializer {
 
@@ -37,10 +36,10 @@ public class CryptoShreddingEventSerializer implements Serializer {
     private final CryptoShreddingService cryptoShreddingService;
     private final ObjectMapper objectMapper;
 
-    public CryptoShreddingEventSerializer(Serializer wrappedSerializer,
+    public CryptoShreddingEventSerializer(Serializer wrappedEventSerializer,
                                           CryptoShreddingService cryptoShreddingService,
                                           ObjectMapper objectMapper) {
-        this.wrappedSerializer = wrappedSerializer;
+        this.wrappedSerializer = wrappedEventSerializer;
         this.cryptoShreddingService = cryptoShreddingService;
         this.objectMapper = objectMapper;
     }
@@ -54,8 +53,10 @@ public class CryptoShreddingEventSerializer implements Serializer {
         }
 
         var secretKey = retrieveOrCreateSecretKeyForSerialization(object, fields);
-        var encryptedObject = encryptAnnotatedFields(object, encryptedFields, secretKey);
-        return wrappedSerializer.serialize(encryptedObject, expectedRepresentation);
+        var encryptedMappedObject = mapAndEncryptAnnotatedFields(object, encryptedFields, secretKey);
+        var serializedObject = wrappedSerializer.serialize(encryptedMappedObject, expectedRepresentation);
+        return new SimpleSerializedObject<>(serializedObject.getData(), expectedRepresentation,
+                wrappedSerializer.typeForClass(ObjectUtils.nullSafeTypeOf(object)));
     }
 
     @Override
@@ -72,8 +73,8 @@ public class CryptoShreddingEventSerializer implements Serializer {
             return wrappedSerializer.deserialize(serializedObject);
         }
 
-        var encryptedSerializedType = new SimpleSerializedType(HashMap.class.getCanonicalName(), null);
-        var encryptedSerializedObject = new SimpleSerializedObject<>((String) serializedObject.getData(), String.class, encryptedSerializedType);
+        var encryptedSerializedType = new SimpleSerializedType(HashMap.class.getCanonicalName(), serializedObject.getType().getRevision());
+        var encryptedSerializedObject = new SimpleSerializedObject<>(serializedObject.getData(), serializedObject.getContentType(), encryptedSerializedType);
         Map<String, Object> encryptedMappedObject = wrappedSerializer.deserialize(encryptedSerializedObject);
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(encryptedMappedObject);
         var optionalSecretKey = retrieveSecretKeyForDeserialization(encryptedMappedObject, serializedFieldNameMapping, fields);
@@ -158,8 +159,8 @@ public class CryptoShreddingEventSerializer implements Serializer {
         throw new UnsupportedEncryptionKeyIdentifierTypeException(object.toString());
     }
 
-    private Object encryptAnnotatedFields(Object object, List<Field> encryptedFields, SecretKey secretKey) {
-        var mappedObject = objectMapper.convertValue(object, new TypeReference<Map<String, Object>>() {
+    private Map<String, Object> mapAndEncryptAnnotatedFields(Object object, List<Field> encryptedFields, SecretKey secretKey) {
+        var mappedObject = objectMapper.convertValue(object, new TypeReference<HashMap<String, Object>>() {
         });
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(mappedObject);
         var base64EncodingAesEncrypter = cryptoShreddingService.createEncrypter(secretKey);

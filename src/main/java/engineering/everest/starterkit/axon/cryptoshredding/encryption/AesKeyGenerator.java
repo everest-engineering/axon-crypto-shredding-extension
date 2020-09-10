@@ -15,8 +15,8 @@ public class AesKeyGenerator {
     private final SecureRandom securerandom;
     private final KeyGenerator keygenerator;
 
-    public AesKeyGenerator(SecureRandom securerandom) throws NoSuchAlgorithmException {
-        this.securerandom = securerandom;
+    public AesKeyGenerator() throws NoSuchAlgorithmException {
+        this.securerandom = new SecureRandom();
         this.keygenerator = KeyGenerator.getInstance(ALGORITHM);
         this.keygenerator.init(KEY_SIZE, this.securerandom);
     }

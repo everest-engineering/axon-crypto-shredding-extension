@@ -69,9 +69,18 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(base64EncodingAesEncrypter);
 
-        jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
+        jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
 
         verify(cryptoShreddingService).getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER);
+    }
+
+    @Test
+    void serialize_WillReturnASerializedObjectWithTypeOfSerializedClass() {
+        when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(base64EncodingAesEncrypter);
+
+        var serialized = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        assertEquals(new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), "0"), serialized.getType());
     }
 
     @Test
@@ -79,38 +88,39 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.empty());
 
         assertThrows(EncryptionKeyDeletedException.class,
-                () -> jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class));
+                () -> jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class));
 
     }
 
     @Test
     void serialize_WillFail_WhenEncryptionKeyIdentifierIsNotSupported() {
         assertThrows(UnsupportedEncryptionKeyIdentifierTypeException.class, () ->
-                jsonCryptoShreddingEventSerializer.serialize(new EventWithUnsupportedEncryptionKeyIdentifierType(), String.class)
+                jsonCryptoShreddingEventSerializer.serialize(new EventWithUnsupportedEncryptionKeyIdentifierType(), byte[].class)
         );
     }
 
     @Test
     void serialize_WillFail_WhenEncryptionKeyIdentifierAnnotationIsMissing() {
         assertThrows(MissingEncryptionKeyIdentifierAnnotation.class,
-                () -> jsonCryptoShreddingEventSerializer.serialize(new EventWithMissingEncryptionKeyIdentifierAnnotation(), String.class));
+                () -> jsonCryptoShreddingEventSerializer.serialize(new EventWithMissingEncryptionKeyIdentifierAnnotation(), byte[].class));
     }
 
     @Test
     void deserialize_WillSkipDecryptingUnencryptedEvents() {
-        var serializedObject = new SimpleSerializedObject<>(EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON, String.class, new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
+        SimpleSerializedType serializedType = new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER);
+        SimpleSerializedObject<byte[]> serializedEvent = new SimpleSerializedObject<>(EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON.getBytes(), byte[].class, serializedType);
 
-        assertEquals(EventWithoutEncryptedFields.createTestInstance(), jsonCryptoShreddingEventSerializer.deserialize(serializedObject));
+        assertEquals(EventWithoutEncryptedFields.createTestInstance(), jsonCryptoShreddingEventSerializer.deserialize(serializedEvent));
         verify(secretKeyRepository, never()).findById(anyString());
     }
 
     @Test
     void deserialize_WillDeserializeUnencryptedEventsCreatedByThisSerializer() {
-        var serializedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithoutEncryptedFields.createTestInstance(), String.class);
+        var serializedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithoutEncryptedFields.createTestInstance(), byte[].class);
         var serializedType = new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER);
 
         EventWithoutEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(
-                new SimpleSerializedObject<>(serializedEvent.getData(), String.class, serializedType));
+                new SimpleSerializedObject<>(serializedEvent.getData(), byte[].class, serializedType));
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), deserialized);
         verify(secretKeyRepository, never()).findById(anyString());
@@ -123,8 +133,8 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
         when(cryptoShreddingService.createDecrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
 
-        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
-        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), String.class,
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
         EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         assertEquals(EventWithEncryptedFields.createTestInstance(), deserialized);
@@ -136,8 +146,8 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.empty());
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
 
-        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
-        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), String.class,
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
         EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         assertEquals(EventWithEncryptedFields.createUnencryptedTestInstance(), deserialized);
@@ -148,9 +158,10 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
 
-        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
-        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent =
-                new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData().replace("keyIdentifier", "renamed-or-lost!"), String.class,
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        byte[] mangledPayload = new String(serializedAndEncryptedEvent.getData()).replace("keyIdentifier", "renamed-or-lost!").getBytes();
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+                new SimpleSerializedObject<>(mangledPayload, byte[].class,
                         new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
         assertThrows(MissingSerializedEncryptionKeyIdentifierException.class, () -> {
@@ -163,9 +174,10 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
 
-        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
-        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent =
-                new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData().replace("key-identifier", ""), String.class,
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        byte[] mangledPayload = new String(serializedAndEncryptedEvent.getData()).replace("key-identifier", "").getBytes();
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+                new SimpleSerializedObject<>(mangledPayload, byte[].class,
                         new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
         assertThrows(MissingSerializedEncryptionKeyIdentifierException.class, () -> {
@@ -178,8 +190,8 @@ class CryptoShreddingEventSerializerTest {
         when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
         when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
 
-        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
-        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), String.class,
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithMissingEncryptionKeyIdentifierAnnotation.class.getCanonicalName(), REVISION_NUMBER));
 
         assertThrows(MissingEncryptionKeyIdentifierAnnotation.class, () -> {
@@ -189,9 +201,9 @@ class CryptoShreddingEventSerializerTest {
 
     @Test
     void canSerializeTo_WillBeDelegated() {
-        cryptoShreddingEventSerializerWithMock.canSerializeTo(String.class);
+        cryptoShreddingEventSerializerWithMock.canSerializeTo(byte[].class);
 
-        verify(mockWrappedSerializer).canSerializeTo(String.class);
+        verify(mockWrappedSerializer).canSerializeTo(byte[].class);
     }
 
     @Test
@@ -204,9 +216,9 @@ class CryptoShreddingEventSerializerTest {
 
     @Test
     void typeForClass_WillBeDelegated() {
-        cryptoShreddingEventSerializerWithMock.typeForClass(String.class);
+        cryptoShreddingEventSerializerWithMock.typeForClass(byte[].class);
 
-        verify(mockWrappedSerializer).typeForClass(String.class);
+        verify(mockWrappedSerializer).typeForClass(byte[].class);
     }
 
     @Test

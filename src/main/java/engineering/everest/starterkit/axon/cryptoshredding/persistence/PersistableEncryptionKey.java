@@ -4,18 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.crypto.SecretKey;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "event_encryption_keys")
+@Entity(name = "eventencryptionkeys")
 public class PersistableEncryptionKey {
     @Id
     private String id;
-    private SecretKey key;
+    @Lob
+    private byte[] key;
+    private String algorithm;
 }
-
-

@@ -9,7 +9,7 @@ import javax.crypto.SecretKey;
 public interface SecretKeyRepository extends JpaRepository<PersistableEncryptionKey, String> {
 
     default SecretKey create(String secretKeyIdentifier, SecretKey key) {
-        save(new PersistableEncryptionKey(secretKeyIdentifier, key));
+        save(new PersistableEncryptionKey(secretKeyIdentifier, key.getEncoded(), key.getAlgorithm()));
         return key;
     }
 }
