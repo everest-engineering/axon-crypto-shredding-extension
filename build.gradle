@@ -33,6 +33,7 @@ ext {
     jacksonVersion = '2.11.2'
     springBootVersion = '2.3.3.RELEASE'
 
+    h2Version = '1.4.200'
     junitVersion = '5.6.2'
     mockitoVersion = '3.5.0'
 }
@@ -52,6 +53,9 @@ dependencies {
 
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+    testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
+    testImplementation 'org.springframework:spring-test'
+    testRuntimeOnly "com.h2database:h2:${h2Version}"
 }
 
 bintray {

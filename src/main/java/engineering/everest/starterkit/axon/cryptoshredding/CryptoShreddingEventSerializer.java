@@ -16,6 +16,7 @@ import org.axonframework.serialization.SerializedType;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.SimpleSerializedObject;
 import org.axonframework.serialization.SimpleSerializedType;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.crypto.SecretKey;
 import java.lang.reflect.Field;
@@ -36,7 +37,7 @@ public class CryptoShreddingEventSerializer implements Serializer {
     private final CryptoShreddingService cryptoShreddingService;
     private final ObjectMapper objectMapper;
 
-    public CryptoShreddingEventSerializer(Serializer wrappedEventSerializer,
+    public CryptoShreddingEventSerializer(@Qualifier("eventSerializer") Serializer wrappedEventSerializer,
                                           CryptoShreddingService cryptoShreddingService,
                                           ObjectMapper objectMapper) {
         this.wrappedSerializer = wrappedEventSerializer;

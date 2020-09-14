@@ -46,8 +46,14 @@ public class CryptoShreddingService {
         return new Base64EncodingAesEncrypter(); // TODO
     }
 
-    public void deleteSecretKey(String keyType, String keyId) {
-        // TODO
+    public void deleteSecretKey(String keyId) {
+        var optionalSecretKey = secretKeyRepository.findById(keyId);
+        var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId));
+        if (secretKey.getKey() != null || secretKey.getAlgorithm() != null) {
+            secretKey.setAlgorithm(null);
+            secretKey.setKey(null);
+            secretKeyRepository.save(secretKey);
+        }
     }
 
     private Optional<SecretKey> createSecretKeyOrEmptyOptional(Optional<PersistableEncryptionKey> optionalPersistableSecretKey) {

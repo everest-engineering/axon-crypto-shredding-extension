@@ -17,6 +17,8 @@ import org.axonframework.serialization.Converter;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.SimpleSerializedObject;
 import org.axonframework.serialization.SimpleSerializedType;
+import org.axonframework.serialization.json.JacksonSerializer;
+import org.axonframework.serialization.xml.XStreamSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +29,6 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Optional;
 
-import static org.axonframework.serialization.json.JacksonSerializer.defaultSerializer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -47,8 +48,6 @@ class CryptoShreddingEventSerializerTest {
     private CryptoShreddingEventSerializer cryptoShreddingEventSerializerWithMock;
     private CryptoShreddingEventSerializer jsonCryptoShreddingEventSerializer;
 
-    // TODO test with XML serializer
-
     @Mock
     private Serializer mockWrappedSerializer;
     @Mock
@@ -61,7 +60,7 @@ class CryptoShreddingEventSerializerTest {
     @BeforeEach
     void setUp() {
         cryptoShreddingEventSerializerWithMock = new CryptoShreddingEventSerializer(mockWrappedSerializer, cryptoShreddingService, new ObjectMapper());
-        jsonCryptoShreddingEventSerializer = new CryptoShreddingEventSerializer(defaultSerializer(), cryptoShreddingService, new ObjectMapper());
+        jsonCryptoShreddingEventSerializer = new CryptoShreddingEventSerializer(JacksonSerializer.defaultSerializer(), cryptoShreddingService, new ObjectMapper());
     }
 
     @Test
@@ -137,6 +136,22 @@ class CryptoShreddingEventSerializerTest {
         SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
         EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+        assertEquals(EventWithEncryptedFields.createTestInstance(), deserialized);
+    }
+
+    @Test
+    void deserialize_WillDecryptEventsSerializedByXmlCryptoShreddingSerializer_WhenEventContainsEncryptedFields() {
+        var xmlCryptoShreddingEventSerializer = new CryptoShreddingEventSerializer(XStreamSerializer.defaultSerializer(), cryptoShreddingService, new ObjectMapper());
+
+        when(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingService.createEncrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
+        when(cryptoShreddingService.createDecrypter(ENCRYPTION_KEY)).thenReturn(new Base64EncodingAesEncrypter());
+
+        var serializedAndEncryptedEvent = xmlCryptoShreddingEventSerializer.serialize(EventWithEncryptedFields.createTestInstance(), String.class);
+        SimpleSerializedObject<String> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), String.class,
+                new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
+        EventWithEncryptedFields deserialized = xmlCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         assertEquals(EventWithEncryptedFields.createTestInstance(), deserialized);
     }
 
