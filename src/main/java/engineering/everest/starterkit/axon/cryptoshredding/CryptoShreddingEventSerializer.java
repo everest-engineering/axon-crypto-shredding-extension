@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import engineering.everest.starterkit.axon.cryptoshredding.annotations.EncryptedField;
 import engineering.everest.starterkit.axon.cryptoshredding.annotations.EncryptionKeyIdentifier;
-import engineering.everest.starterkit.axon.cryptoshredding.encryption.EncrypterDecrypterFactory;
+import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesEncrypterDecrypterFactory;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierException;
@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.crypto.SecretKey;
 import java.lang.reflect.Field;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,15 +37,15 @@ public class CryptoShreddingEventSerializer implements Serializer {
 
     private final Serializer wrappedSerializer;
     private final CryptoShreddingKeyService cryptoShreddingKeyService;
-    private final EncrypterDecrypterFactory encrypterDecrypterFactory;
+    private final AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory;
     private final ObjectMapper objectMapper;
 
     public CryptoShreddingEventSerializer(@Qualifier("eventSerializer") Serializer wrappedEventSerializer,
                                           CryptoShreddingKeyService cryptoShreddingKeyService,
-                                          EncrypterDecrypterFactory encrypterDecrypterFactory, ObjectMapper objectMapper) {
+                                          AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory, ObjectMapper objectMapper) {
         this.wrappedSerializer = wrappedEventSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
-        this.encrypterDecrypterFactory = encrypterDecrypterFactory;
+        this.aesEncrypterDecrypterFactory = aesEncrypterDecrypterFactory;
         this.objectMapper = objectMapper;
     }
 
@@ -167,12 +168,13 @@ public class CryptoShreddingEventSerializer implements Serializer {
         var mappedObject = objectMapper.convertValue(object, new TypeReference<HashMap<String, Object>>() {
         });
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(mappedObject);
-        var base64EncodingAesEncrypter = encrypterDecrypterFactory.createEncrypter();
+        var base64EncodingAesEncrypter = aesEncrypterDecrypterFactory.createEncrypter();
 
         encryptedFields.forEach(field -> {
             var fieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
             var serializedClearText = wrappedSerializer.serialize(mappedObject.get(fieldKey), String.class);
-            mappedObject.put(fieldKey, base64EncodingAesEncrypter.encryptAndEncode(secretKey, serializedClearText.getData()));
+            byte[] cipherText = base64EncodingAesEncrypter.encrypt(secretKey, serializedClearText.getData());
+            mappedObject.put(fieldKey, Base64.getEncoder().encodeToString(cipherText));
         });
 
         return mappedObject;
@@ -187,11 +189,12 @@ public class CryptoShreddingEventSerializer implements Serializer {
                                                        Map<String, String> serializedFieldNameMapping,
                                                        List<Field> encryptedFields,
                                                        SecretKey secretKey) {
-        var base64EncodingAesEncrypter = encrypterDecrypterFactory.createDecrypter();
+        var base64EncodingAesEncrypter = aesEncrypterDecrypterFactory.createDecrypter();
 
         encryptedFields.forEach(field -> {
             var serializedFieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
-            var cleartextSerializedFieldValue = base64EncodingAesEncrypter.decryptBase64Encoded(secretKey, (String) encryptedMappedObject.get(serializedFieldKey));
+            var cipherText = Base64.getDecoder().decode((String)encryptedMappedObject.get(serializedFieldKey));
+            var cleartextSerializedFieldValue = base64EncodingAesEncrypter.decrypt(secretKey, cipherText);
             var deserializedFieldValue = wrappedSerializer.deserialize(
                     new SimpleSerializedObject<>(cleartextSerializedFieldValue, String.class, Object.class.getCanonicalName(), null));
             encryptedMappedObject.put(serializedFieldKey, deserializedFieldValue);
