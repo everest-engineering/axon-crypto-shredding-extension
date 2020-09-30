@@ -1,7 +1,6 @@
 package engineering.everest.starterkit.axon.cryptoshredding;
 
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesKeyGenerator;
-import engineering.everest.starterkit.axon.cryptoshredding.encryption.Base64EncodingAesEncrypter;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.PersistableEncryptionKey;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
@@ -12,12 +11,12 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Optional;
 
 @Component
-public class CryptoShreddingService {
+public class CryptoShreddingKeyService {
 
     private final SecretKeyRepository secretKeyRepository;
     private final AesKeyGenerator secretKeyGenerator;
 
-    public CryptoShreddingService(SecretKeyRepository secretKeyRepository, AesKeyGenerator secretKeyGenerator) {
+    public CryptoShreddingKeyService(SecretKeyRepository secretKeyRepository, AesKeyGenerator secretKeyGenerator) {
         this.secretKeyRepository = secretKeyRepository;
         this.secretKeyGenerator = secretKeyGenerator;
     }
@@ -36,14 +35,6 @@ public class CryptoShreddingService {
             throw new MissingEncryptionKeyRecordException(keyId);
         }
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
-    }
-
-    public Base64EncodingAesEncrypter createEncrypter(SecretKey secretKey) {
-        return new Base64EncodingAesEncrypter(); // TODO
-    }
-
-    public Base64EncodingAesEncrypter createDecrypter(SecretKey secretKey) {
-        return new Base64EncodingAesEncrypter(); // TODO
     }
 
     public void deleteSecretKey(String keyId) {

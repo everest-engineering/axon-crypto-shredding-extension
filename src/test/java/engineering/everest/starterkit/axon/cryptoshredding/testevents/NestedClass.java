@@ -1,4 +1,4 @@
-package engineering.everest.starterkit.axon.cryptoshredding.serialization.testevents;
+package engineering.everest.starterkit.axon.cryptoshredding.testevents;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -2,7 +2,6 @@ package engineering.everest.starterkit.axon.cryptoshredding;
 
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,67 +24,62 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EntityScan(basePackages = "engineering.everest.starterkit.axon.cryptoshredding.persistence")
 @EnableJpaRepositories(basePackages = "engineering.everest.starterkit.axon.cryptoshredding.persistence")
 @ContextConfiguration(classes = TestsJpaConfig.class)
-class CryptoShreddingServiceIntegrationTest {
+class CryptoShreddingKeyServiceIntegrationTest {
 
     private static final String SECRET_KEY_ID = "secret-key-id";
 
     @Autowired
     private SecretKeyRepository secretKeyRepository;
     @Autowired
-    private CryptoShreddingService cryptoShreddingService;
-
-    @BeforeEach
-    void setUp() {
-
-    }
+    private CryptoShreddingKeyService cryptoShreddingKeyService;
 
     @Test
     void getOrCreateSecretKeyUnlessDeleted_WillCreateSecretKeyOnFirstGet() {
-        var secretKey = cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        var secretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
 
         assertEquals("AES", secretKey.get().getAlgorithm());
     }
 
     @Test
     void getOrCreateSecretKeyUnlessDeleted_WillReturnEmptyOptional_WhenKeyHasBeenDeleted() {
-        cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingService.deleteSecretKey(SECRET_KEY_ID);
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
 
-        assertTrue(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
+        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
     }
 
     @Test
     void getExistingSecretKey_WillRetrievePreviouslyCreatedKey() {
-        var secretKey1 = cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        var secretKey2 = cryptoShreddingService.getExistingSecretKey(SECRET_KEY_ID);
+        var secretKey1 = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        var secretKey2 = cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID);
 
         assertEquals(secretKey1.get(), secretKey2.get());
     }
 
     @Test
     void getExistingSecretKey_WillFailWhenKeyNotCreated() {
-        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingService.getExistingSecretKey(SECRET_KEY_ID));
+        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID));
     }
 
     @Test
     void getExistingSecretKey_WillReturnEmptyOptional_WhenKeyPreviouslyCreatedAndDeleted() {
-        cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingService.deleteSecretKey(SECRET_KEY_ID);
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
 
-        assertEquals(Optional.empty(), cryptoShreddingService.getExistingSecretKey(SECRET_KEY_ID));
+        assertEquals(Optional.empty(), cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID));
     }
 
     @Test
     void keysAreIdempotentlyDeleted() {
-        cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingService.deleteSecretKey(SECRET_KEY_ID);
-        cryptoShreddingService.deleteSecretKey(SECRET_KEY_ID);
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
+        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
 
-        assertTrue(cryptoShreddingService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
+        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
     }
 
     @Test
     void deletingANonExistentKey_WillFail() {
-        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingService.deleteSecretKey(SECRET_KEY_ID));
+        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID));
     }
 }
