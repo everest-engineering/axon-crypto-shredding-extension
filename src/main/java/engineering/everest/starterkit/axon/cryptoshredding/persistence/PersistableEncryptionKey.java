@@ -11,7 +11,7 @@ import javax.persistence.Lob;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "eventencryptionkeys")
+@Entity(name = "cryptoshreddingkeys")
 public class PersistableEncryptionKey {
     @Id
     private String id;
