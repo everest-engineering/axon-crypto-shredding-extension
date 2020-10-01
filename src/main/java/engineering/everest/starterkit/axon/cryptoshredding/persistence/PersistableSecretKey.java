@@ -1,20 +1,21 @@
 package engineering.everest.starterkit.axon.cryptoshredding.persistence;
 
+import engineering.everest.starterkit.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
 import javax.persistence.Lob;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(name = "cryptoshreddingkeys")
-public class PersistableEncryptionKey {
-    @Id
-    private String id;
+public class PersistableSecretKey {
+    @EmbeddedId
+    private TypeDifferentiatedSecretKeyId id;
     @Lob
     private byte[] key;
     private String algorithm;

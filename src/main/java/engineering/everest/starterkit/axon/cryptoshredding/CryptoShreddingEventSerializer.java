@@ -7,7 +7,7 @@ import engineering.everest.starterkit.axon.cryptoshredding.annotations.Encryptio
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesEncrypterDecrypterFactory;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
-import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierException;
+import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import lombok.extern.log4j.Log4j2;
 import org.axonframework.common.ObjectUtils;
@@ -42,7 +42,8 @@ public class CryptoShreddingEventSerializer implements Serializer {
 
     public CryptoShreddingEventSerializer(@Qualifier("eventSerializer") Serializer wrappedEventSerializer,
                                           CryptoShreddingKeyService cryptoShreddingKeyService,
-                                          AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory, ObjectMapper objectMapper) {
+                                          AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory,
+                                          ObjectMapper objectMapper) {
         this.wrappedSerializer = wrappedEventSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
         this.aesEncrypterDecrypterFactory = aesEncrypterDecrypterFactory;
@@ -119,7 +120,7 @@ public class CryptoShreddingEventSerializer implements Serializer {
 
         var secretKeyIdentifier = extractSecretKeyIdentifier(object, optionalField.get());
         var optionalSecretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(secretKeyIdentifier);
-        return optionalSecretKey.orElseThrow(() -> new EncryptionKeyDeletedException(secretKeyIdentifier));
+        return optionalSecretKey.orElseThrow(() -> new EncryptionKeyDeletedException(secretKeyIdentifier.getKeyId(), secretKeyIdentifier.getKeyType()));
     }
 
     private Optional<SecretKey> retrieveSecretKeyForDeserialization(Map<String, Object> encryptedMappedObject,
@@ -130,16 +131,17 @@ public class CryptoShreddingEventSerializer implements Serializer {
             throw new MissingEncryptionKeyIdentifierAnnotation();
         }
 
-        var secretKeyIdentifierKey = serializedFieldNameMapping.get(optionalField.get().getName().toLowerCase());
-        if (secretKeyIdentifierKey == null) {
-            throw new MissingSerializedEncryptionKeyIdentifierException();
+        var secretKeyIdentifierFieldKeyType = optionalField.get().getAnnotation(EncryptionKeyIdentifier.class).keyType();
+        var secretKeyIdentifierFieldName = serializedFieldNameMapping.get(optionalField.get().getName().toLowerCase());
+        if (secretKeyIdentifierFieldName == null) {
+            throw new MissingSerializedEncryptionKeyIdentifierFieldException();
         }
 
-        var secretKeyIdentifier = encryptedMappedObject.get(secretKeyIdentifierKey).toString();
+        var secretKeyIdentifier = encryptedMappedObject.get(secretKeyIdentifierFieldName).toString();
         if (secretKeyIdentifier == null || secretKeyIdentifier.isBlank()) {
-            throw new MissingSerializedEncryptionKeyIdentifierException();
+            throw new MissingSerializedEncryptionKeyIdentifierFieldException();
         }
-        return cryptoShreddingKeyService.getExistingSecretKey(secretKeyIdentifier);
+        return cryptoShreddingKeyService.getExistingSecretKey(new TypeDifferentiatedSecretKeyId(secretKeyIdentifier, secretKeyIdentifierFieldKeyType));
     }
 
     private Optional<Field> findOptionalSecretKeyIdentifierField(List<Field> fields) {
@@ -148,10 +150,12 @@ public class CryptoShreddingEventSerializer implements Serializer {
                 .findFirst();
     }
 
-    private String extractSecretKeyIdentifier(Object object, Field secretKeyIdentifierField) {
+    private TypeDifferentiatedSecretKeyId extractSecretKeyIdentifier(Object object, Field secretKeyIdentifierField) {
         secretKeyIdentifierField.setAccessible(true);
         try {
-            return convertToString(secretKeyIdentifierField.get(object));
+            return new TypeDifferentiatedSecretKeyId(
+                    convertToString(secretKeyIdentifierField.get(object)),
+                    secretKeyIdentifierField.getAnnotation(EncryptionKeyIdentifier.class).keyType());
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
@@ -168,12 +172,12 @@ public class CryptoShreddingEventSerializer implements Serializer {
         var mappedObject = objectMapper.convertValue(object, new TypeReference<HashMap<String, Object>>() {
         });
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(mappedObject);
-        var base64EncodingAesEncrypter = aesEncrypterDecrypterFactory.createEncrypter();
+        var encrypter = aesEncrypterDecrypterFactory.createEncrypter();
 
         encryptedFields.forEach(field -> {
             var fieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
             var serializedClearText = wrappedSerializer.serialize(mappedObject.get(fieldKey), String.class);
-            byte[] cipherText = base64EncodingAesEncrypter.encrypt(secretKey, serializedClearText.getData());
+            byte[] cipherText = encrypter.encrypt(secretKey, serializedClearText.getData());
             mappedObject.put(fieldKey, Base64.getEncoder().encodeToString(cipherText));
         });
 
@@ -189,12 +193,12 @@ public class CryptoShreddingEventSerializer implements Serializer {
                                                        Map<String, String> serializedFieldNameMapping,
                                                        List<Field> encryptedFields,
                                                        SecretKey secretKey) {
-        var base64EncodingAesEncrypter = aesEncrypterDecrypterFactory.createDecrypter();
+        var decrypter = aesEncrypterDecrypterFactory.createDecrypter();
 
         encryptedFields.forEach(field -> {
             var serializedFieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
-            var cipherText = Base64.getDecoder().decode((String)encryptedMappedObject.get(serializedFieldKey));
-            var cleartextSerializedFieldValue = base64EncodingAesEncrypter.decrypt(secretKey, cipherText);
+            var cipherText = Base64.getDecoder().decode((String) encryptedMappedObject.get(serializedFieldKey));
+            var cleartextSerializedFieldValue = decrypter.decrypt(secretKey, cipherText);
             var deserializedFieldValue = wrappedSerializer.deserialize(
                     new SimpleSerializedObject<>(cleartextSerializedFieldValue, String.class, Object.class.getCanonicalName(), null));
             encryptedMappedObject.put(serializedFieldKey, deserializedFieldValue);

@@ -12,5 +12,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({ElementType.FIELD})
 // TODO lots of documentation
 public @interface EncryptionKeyIdentifier {
-    // TODO: need to store a key type
+    String keyType() default "";
 }

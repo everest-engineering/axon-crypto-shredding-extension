@@ -6,9 +6,10 @@ import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesEncrypt
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesEncrypterDecrypterFactory;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
-import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierException;
+import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
+import engineering.everest.starterkit.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
 import engineering.everest.starterkit.axon.cryptoshredding.testevents.EventWithEncryptedFields;
 import engineering.everest.starterkit.axon.cryptoshredding.testevents.EventWithMissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.starterkit.axon.cryptoshredding.testevents.EventWithUnsupportedEncryptionKeyIdentifierType;
@@ -32,7 +33,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,7 +43,7 @@ import static org.mockito.Mockito.when;
 class CryptoShreddingEventSerializerTest {
 
     private static final String REVISION_NUMBER = "0";
-    private static final String KEY_IDENTIFIER = "key-identifier";
+    private static final TypeDifferentiatedSecretKeyId KEY_IDENTIFIER = new TypeDifferentiatedSecretKeyId("key-identifier", "");
     private static final String EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON = "{\"anIntegerField\":65535,\"astringField\":\"Default string\",\"aprimitiveIntegerField\":42,\"aprimitiveLongField\":9600,\"aprimitiveFloatField\":123.45679,\"auuidfield\":\"deadbeef-dead-beef-dead-beef00000042\",\"alongField\":98765432,\"abyteArrayField\":\"SSBhbSBhIGJ5dGUgYXJyYXk=\"}";
     private static final SecretKey ENCRYPTION_KEY = new SecretKeySpec("0123456789012345".getBytes(), "AES");
 
@@ -117,7 +118,7 @@ class CryptoShreddingEventSerializerTest {
         SimpleSerializedObject<byte[]> serializedEvent = new SimpleSerializedObject<>(EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON.getBytes(), byte[].class, serializedType);
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), jsonCryptoShreddingEventSerializer.deserialize(serializedEvent));
-        verify(secretKeyRepository, never()).findById(anyString());
+        verify(secretKeyRepository, never()).findById(any(TypeDifferentiatedSecretKeyId.class));
     }
 
     @Test
@@ -129,7 +130,7 @@ class CryptoShreddingEventSerializerTest {
                 new SimpleSerializedObject<>(serializedEvent.getData(), byte[].class, serializedType));
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), deserialized);
-        verify(secretKeyRepository, never()).findById(anyString());
+        verify(secretKeyRepository, never()).findById(any(TypeDifferentiatedSecretKeyId.class));
     }
 
     @Test
@@ -143,6 +144,7 @@ class CryptoShreddingEventSerializerTest {
         SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), REVISION_NUMBER));
         EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+
         assertEquals(EventWithEncryptedFields.createTestInstance(), deserialized);
     }
 
@@ -188,7 +190,7 @@ class CryptoShreddingEventSerializerTest {
                 new SimpleSerializedObject<>(mangledPayload, byte[].class,
                         new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
-        assertThrows(MissingSerializedEncryptionKeyIdentifierException.class, () -> {
+        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class, () -> {
             EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         });
     }
@@ -204,7 +206,7 @@ class CryptoShreddingEventSerializerTest {
                 new SimpleSerializedObject<>(mangledPayload, byte[].class,
                         new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
-        assertThrows(MissingSerializedEncryptionKeyIdentifierException.class, () -> {
+        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class, () -> {
             EventWithEncryptedFields deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         });
     }
@@ -221,6 +223,24 @@ class CryptoShreddingEventSerializerTest {
         assertThrows(MissingEncryptionKeyIdentifierAnnotation.class, () -> {
             EventWithMissingEncryptionKeyIdentifierAnnotation deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
         });
+    }
+
+    @Test
+    void keyTypeCanBeUsedToDifferentiateBetweenPrimitiveIdentifiers() {
+        var typeDifferentiatedKey = new TypeDifferentiatedSecretKeyId(String.valueOf(1234L), "some-tag");
+
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(typeDifferentiatedKey)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getExistingSecretKey(typeDifferentiatedKey)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(encrypterFactory.createEncrypter()).thenReturn(aesEncrypter);
+        when(encrypterFactory.createDecrypter()).thenReturn(aesDecrypter);
+
+        var eventWithDifferentiatedKeyType = new EventWithDifferentiatedKeyType(1234L, "field value");
+        var serializedAndEncryptedEvent = jsonCryptoShreddingEventSerializer.serialize(eventWithDifferentiatedKeyType, byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent = new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
+                new SimpleSerializedType(EventWithDifferentiatedKeyType.class.getCanonicalName(), REVISION_NUMBER));
+        EventWithDifferentiatedKeyType deserialized = jsonCryptoShreddingEventSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+
+        assertEquals(eventWithDifferentiatedKeyType, deserialized);
     }
 
     @Test

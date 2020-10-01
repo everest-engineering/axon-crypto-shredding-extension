@@ -2,7 +2,7 @@ package engineering.everest.starterkit.axon.cryptoshredding;
 
 import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesKeyGenerator;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
-import engineering.everest.starterkit.axon.cryptoshredding.persistence.PersistableEncryptionKey;
+import engineering.everest.starterkit.axon.cryptoshredding.persistence.PersistableSecretKey;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +12,7 @@ import java.util.Optional;
 
 @Component
 public class CryptoShreddingKeyService {
+    private static final String DEFAULT_KEY_TYPE = "";
 
     private final SecretKeyRepository secretKeyRepository;
     private final AesKeyGenerator secretKeyGenerator;
@@ -22,6 +23,14 @@ public class CryptoShreddingKeyService {
     }
 
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(String keyId) {
+        return getOrCreateSecretKeyUnlessDeleted(keyId, DEFAULT_KEY_TYPE);
+    }
+
+    public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(String keyId, String keyType) {
+        return getOrCreateSecretKeyUnlessDeleted(new TypeDifferentiatedSecretKeyId(keyId, keyType));
+    }
+
+    public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
             return Optional.of(secretKeyRepository.create(keyId, secretKeyGenerator.generateKey()));
@@ -30,16 +39,32 @@ public class CryptoShreddingKeyService {
     }
 
     public Optional<SecretKey> getExistingSecretKey(String keyId) {
+        return getExistingSecretKey(keyId, DEFAULT_KEY_TYPE);
+    }
+
+    public Optional<SecretKey> getExistingSecretKey(String keyId, String keyType) {
+        return getExistingSecretKey(new TypeDifferentiatedSecretKeyId(keyId, keyType));
+    }
+
+    public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
-            throw new MissingEncryptionKeyRecordException(keyId);
+            throw new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType());
         }
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
     }
 
     public void deleteSecretKey(String keyId) {
+        deleteSecretKey(keyId, DEFAULT_KEY_TYPE);
+    }
+
+    public void deleteSecretKey(String keyId, String keyType) {
+        deleteSecretKey(new TypeDifferentiatedSecretKeyId(keyId, keyType));
+    }
+
+    public void deleteSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalSecretKey = secretKeyRepository.findById(keyId);
-        var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId));
+        var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType()));
         if (secretKey.getKey() != null || secretKey.getAlgorithm() != null) {
             secretKey.setAlgorithm(null);
             secretKey.setKey(null);
@@ -47,7 +72,7 @@ public class CryptoShreddingKeyService {
         }
     }
 
-    private Optional<SecretKey> createSecretKeyOrEmptyOptional(Optional<PersistableEncryptionKey> optionalPersistableSecretKey) {
+    private Optional<SecretKey> createSecretKeyOrEmptyOptional(Optional<PersistableSecretKey> optionalPersistableSecretKey) {
         var persistableSecretKey = optionalPersistableSecretKey.get();
         if (persistableSecretKey.getAlgorithm() == null || persistableSecretKey.getKey() == null) {
             return Optional.empty();
