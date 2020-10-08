@@ -33,18 +33,18 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 @Log4j2
-public class CryptoShreddingEventSerializer implements Serializer {
+public class CryptoShreddingSerializer implements Serializer {
 
     private final Serializer wrappedSerializer;
     private final CryptoShreddingKeyService cryptoShreddingKeyService;
     private final AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory;
     private final ObjectMapper objectMapper;
 
-    public CryptoShreddingEventSerializer(@Qualifier("eventSerializer") Serializer wrappedEventSerializer,
-                                          CryptoShreddingKeyService cryptoShreddingKeyService,
-                                          AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory,
-                                          ObjectMapper objectMapper) {
-        this.wrappedSerializer = wrappedEventSerializer;
+    public CryptoShreddingSerializer(@Qualifier("eventSerializer") Serializer wrappedSerializer,
+                                     CryptoShreddingKeyService cryptoShreddingKeyService,
+                                     AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory,
+                                     ObjectMapper objectMapper) {
+        this.wrappedSerializer = wrappedSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
         this.aesEncrypterDecrypterFactory = aesEncrypterDecrypterFactory;
         this.objectMapper = objectMapper;
