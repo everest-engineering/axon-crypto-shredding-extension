@@ -25,7 +25,6 @@ class DefaultAesDecrypter implements Decrypter {
 
     public String decrypt(SecretKey secretKey, byte[] initializationVectorAndCipherText) {
         try {
-            // TODO this doesn't look reentrant
             var cipher = Cipher.getInstance(CIPHER_ALGORITHM);
             cipher.init(DECRYPT_MODE, secretKey, new IvParameterSpec(initializationVectorAndCipherText, 0, INITIALIZATION_VECTOR_LENGTH), secureRandom);
             return new String(cipher.doFinal(initializationVectorAndCipherText, INITIALIZATION_VECTOR_LENGTH, initializationVectorAndCipherText.length - INITIALIZATION_VECTOR_LENGTH));
