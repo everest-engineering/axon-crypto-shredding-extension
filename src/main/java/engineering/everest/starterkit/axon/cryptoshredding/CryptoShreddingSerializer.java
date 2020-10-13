@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import engineering.everest.starterkit.axon.cryptoshredding.annotations.EncryptedField;
 import engineering.everest.starterkit.axon.cryptoshredding.annotations.EncryptionKeyIdentifier;
-import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesEncrypterDecrypterFactory;
+import engineering.everest.starterkit.axon.cryptoshredding.encryption.EncrypterDecrypterFactory;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
@@ -37,16 +37,16 @@ public class CryptoShreddingSerializer implements Serializer {
 
     private final Serializer wrappedSerializer;
     private final CryptoShreddingKeyService cryptoShreddingKeyService;
-    private final AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory;
+    private final EncrypterDecrypterFactory encrypterDecrypterFactory;
     private final ObjectMapper objectMapper;
 
     public CryptoShreddingSerializer(@Qualifier("eventSerializer") Serializer wrappedSerializer,
                                      CryptoShreddingKeyService cryptoShreddingKeyService,
-                                     AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory,
+                                     EncrypterDecrypterFactory encrypterDecrypterFactory,
                                      ObjectMapper objectMapper) {
         this.wrappedSerializer = wrappedSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
-        this.aesEncrypterDecrypterFactory = aesEncrypterDecrypterFactory;
+        this.encrypterDecrypterFactory = encrypterDecrypterFactory;
         this.objectMapper = objectMapper;
     }
 
@@ -172,7 +172,7 @@ public class CryptoShreddingSerializer implements Serializer {
         var mappedObject = objectMapper.convertValue(object, new TypeReference<HashMap<String, Object>>() {
         });
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(mappedObject);
-        var encrypter = aesEncrypterDecrypterFactory.createEncrypter();
+        var encrypter = encrypterDecrypterFactory.createEncrypter();
 
         encryptedFields.forEach(field -> {
             var fieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());
@@ -193,7 +193,7 @@ public class CryptoShreddingSerializer implements Serializer {
                                                        Map<String, String> serializedFieldNameMapping,
                                                        List<Field> encryptedFields,
                                                        SecretKey secretKey) {
-        var decrypter = aesEncrypterDecrypterFactory.createDecrypter();
+        var decrypter = encrypterDecrypterFactory.createDecrypter();
 
         encryptedFields.forEach(field -> {
             var serializedFieldKey = serializedFieldNameMapping.get(field.getName().toLowerCase());

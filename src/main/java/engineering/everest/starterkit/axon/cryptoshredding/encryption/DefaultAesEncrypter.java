@@ -14,13 +14,13 @@ import java.security.SecureRandom;
 import static java.lang.System.arraycopy;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
 
-public class AesEncrypter {
+class DefaultAesEncrypter implements Encrypter {
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5PADDING";
     private static final int INITIALIZATION_VECTOR_LENGTH = 16;
 
     private final SecureRandom secureRandom;
 
-    public AesEncrypter(SecureRandom secureRandom) {
+    public DefaultAesEncrypter(SecureRandom secureRandom) {
         this.secureRandom = secureRandom;
     }
 

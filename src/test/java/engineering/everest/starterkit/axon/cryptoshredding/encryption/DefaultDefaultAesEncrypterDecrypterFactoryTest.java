@@ -8,22 +8,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @ExtendWith(MockitoExtension.class)
-class AesEncrypterDecrypterFactoryTest {
+class DefaultDefaultAesEncrypterDecrypterFactoryTest {
 
-    private AesEncrypterDecrypterFactory aesEncrypterDecrypterFactory;
+    private DefaultAesEncrypterDecrypterFactory defaultAesEncrypterDecrypterFactory;
 
     @BeforeEach
     void setUp() {
-        aesEncrypterDecrypterFactory = new AesEncrypterDecrypterFactory();
+        defaultAesEncrypterDecrypterFactory = new DefaultAesEncrypterDecrypterFactory();
     }
 
     @Test
     void createEncrypterReturnsNewInstances() {
-        assertNotEquals(aesEncrypterDecrypterFactory.createEncrypter(), aesEncrypterDecrypterFactory.createEncrypter());
+        assertNotEquals(defaultAesEncrypterDecrypterFactory.createEncrypter(), defaultAesEncrypterDecrypterFactory.createEncrypter());
     }
 
     @Test
     void createDecrypterReturnsNewInstances() {
-        assertNotEquals(aesEncrypterDecrypterFactory.createDecrypter(), aesEncrypterDecrypterFactory.createDecrypter());
+        assertNotEquals(defaultAesEncrypterDecrypterFactory.createDecrypter(), defaultAesEncrypterDecrypterFactory.createDecrypter());
     }
 }

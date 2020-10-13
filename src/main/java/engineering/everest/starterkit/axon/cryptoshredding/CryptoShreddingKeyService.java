@@ -1,6 +1,6 @@
 package engineering.everest.starterkit.axon.cryptoshredding;
 
-import engineering.everest.starterkit.axon.cryptoshredding.encryption.AesKeyGenerator;
+import engineering.everest.starterkit.axon.cryptoshredding.encryption.KeyGenerator;
 import engineering.everest.starterkit.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.PersistableSecretKey;
 import engineering.everest.starterkit.axon.cryptoshredding.persistence.SecretKeyRepository;
@@ -15,9 +15,9 @@ public class CryptoShreddingKeyService {
     private static final String DEFAULT_KEY_TYPE = "";
 
     private final SecretKeyRepository secretKeyRepository;
-    private final AesKeyGenerator secretKeyGenerator;
+    private final KeyGenerator secretKeyGenerator;
 
-    public CryptoShreddingKeyService(SecretKeyRepository secretKeyRepository, AesKeyGenerator secretKeyGenerator) {
+    public CryptoShreddingKeyService(SecretKeyRepository secretKeyRepository, KeyGenerator secretKeyGenerator) {
         this.secretKeyRepository = secretKeyRepository;
         this.secretKeyGenerator = secretKeyGenerator;
     }
