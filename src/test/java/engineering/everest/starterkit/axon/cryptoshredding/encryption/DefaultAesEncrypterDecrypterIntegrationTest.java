@@ -13,8 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
-class AesEncrypterDecrypterIntegrationTest {
+class DefaultAesEncrypterDecrypterIntegrationTest {
 
+    private static final String TINY_MESSAGE = "42";
     private static final String PLAIN_TEXT_MESSAGE = "The quick brown fox jumped ship. This is a long payload by design. " +
             "Please keep it such so that we have confidence in our ability to handle long messages. Lorem ipsum dolor sit amet, " +
             "consectetur adipiscing elit. Nunc sit amet nulla id lacus vulputate fringilla at sed est. Sed viverra rhoncus " +
@@ -32,37 +33,46 @@ class AesEncrypterDecrypterIntegrationTest {
             "Nullam vitae pretium erat. Ut ut diam risus. Maecenas mauris ligula, pretium ac lectus vitae, tincidunt venenatis mi. " +
             "Sed odio nisi, placerat id lectus non, condimentum ultrices arcu.";
 
-    private AesKeyGenerator aesKeyGenerator;
-    private AesEncrypter base64EncodingAesEncrypter;
-    private AesDecrypter aesDecrypter;
+    private DefaultAesKeyGenerator defaultAesKeyGenerator;
+    private DefaultAesEncrypter base64EncodingDefaultAesEncrypter;
+    private DefaultAesDecrypter defaultAesDecrypter;
 
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
         var secureRandom = new SecureRandom();
-        aesKeyGenerator = new AesKeyGenerator();
-        base64EncodingAesEncrypter = new AesEncrypter(secureRandom);
-        aesDecrypter = new AesDecrypter(secureRandom);
+        defaultAesKeyGenerator = new DefaultAesKeyGenerator();
+        base64EncodingDefaultAesEncrypter = new DefaultAesEncrypter(secureRandom);
+        defaultAesDecrypter = new DefaultAesDecrypter(secureRandom);
     }
 
     @Test
     void willDecryptItsOwnEncryptedMessages() {
-        var secretKey = aesKeyGenerator.generateKey();
-        var encodedCipherText = base64EncodingAesEncrypter.encrypt(secretKey, PLAIN_TEXT_MESSAGE);
-        var decodedPlainText = aesDecrypter.decrypt(secretKey, encodedCipherText);
+        var secretKey = defaultAesKeyGenerator.generateKey();
+        var encodedCipherText = base64EncodingDefaultAesEncrypter.encrypt(secretKey, PLAIN_TEXT_MESSAGE);
+        var decodedPlainText = defaultAesDecrypter.decrypt(secretKey, encodedCipherText);
 
         assertEquals(PLAIN_TEXT_MESSAGE, decodedPlainText);
     }
 
     @Test
+    void paddingWorksForTinyMessages() {
+        var secretKey = defaultAesKeyGenerator.generateKey();
+        var encodedCipherText = base64EncodingDefaultAesEncrypter.encrypt(secretKey, TINY_MESSAGE);
+        var decodedPlainText = defaultAesDecrypter.decrypt(secretKey, encodedCipherText);
+
+        assertEquals(TINY_MESSAGE, decodedPlainText);
+    }
+
+    @Test
     void encrypt_WillFail_WhenEncryptionKeyIsInvalid() {
         SecretKeySpec invalidAlgorithm = new SecretKeySpec("blah".getBytes(), "invalid algorithm");
-        assertThrows(RuntimeException.class, () -> base64EncodingAesEncrypter.encrypt(invalidAlgorithm, PLAIN_TEXT_MESSAGE), PLAIN_TEXT_MESSAGE);
+        assertThrows(RuntimeException.class, () -> base64EncodingDefaultAesEncrypter.encrypt(invalidAlgorithm, PLAIN_TEXT_MESSAGE), PLAIN_TEXT_MESSAGE);
     }
 
     @Test
     void decrypt_WillFail_WhenDecryptionKeyIsInvalid() {
-        var encodedCipherText = base64EncodingAesEncrypter.encrypt(aesKeyGenerator.generateKey(), PLAIN_TEXT_MESSAGE);
+        var encodedCipherText = base64EncodingDefaultAesEncrypter.encrypt(defaultAesKeyGenerator.generateKey(), PLAIN_TEXT_MESSAGE);
 
-        assertThrows(RuntimeException.class, () -> aesDecrypter.decrypt(aesKeyGenerator.generateKey(), encodedCipherText));
+        assertThrows(RuntimeException.class, () -> defaultAesDecrypter.decrypt(defaultAesKeyGenerator.generateKey(), encodedCipherText));
     }
 }

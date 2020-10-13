@@ -13,13 +13,13 @@ import java.security.SecureRandom;
 
 import static javax.crypto.Cipher.DECRYPT_MODE;
 
-public class AesDecrypter {
+class DefaultAesDecrypter implements Decrypter {
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5PADDING";
     private static final int INITIALIZATION_VECTOR_LENGTH = 16;
 
     private final SecureRandom secureRandom;
 
-    public AesDecrypter(SecureRandom secureRandom) {
+    public DefaultAesDecrypter(SecureRandom secureRandom) {
         this.secureRandom = secureRandom;
     }
 
