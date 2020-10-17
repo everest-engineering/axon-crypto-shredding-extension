@@ -26,7 +26,6 @@ class DefaultAesEncrypter implements Encrypter {
 
     public byte[] encrypt(SecretKey secretKey, String cleartext) {
         try {
-            // TODO this doesn't look reentrant
             var cipher = Cipher.getInstance(CIPHER_ALGORITHM);
             byte[] initializationVector = createInitializationVector();
             cipher.init(ENCRYPT_MODE, secretKey, new IvParameterSpec(initializationVector), secureRandom);
