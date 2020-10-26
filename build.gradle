@@ -28,14 +28,14 @@ lombok {
 }
 
 ext {
-    axonVersion = '4.4.2'
-    guavaVersion = '29.0-jre'
+    axonVersion = '4.4.3'
+    guavaVersion = '30.0-jre'
     jacksonVersion = '2.11.2'
-    springBootVersion = '2.3.3.RELEASE'
+    springBootVersion = '2.3.4.RELEASE'
 
     h2Version = '1.4.200'
-    junitVersion = '5.6.2'
-    mockitoVersion = '3.5.0'
+    junitVersion = '5.7.0'
+    mockitoVersion = '3.5.15'
 }
 
 dependencyManagement {
