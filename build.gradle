@@ -23,15 +23,15 @@ test {
 }
 
 lombok {
-    version = '1.18.12'
+    version = '1.18.16'
     generateLombokConfig.enabled = false
 }
 
 ext {
-    axonVersion = '4.4.3'
+    axonVersion = '4.4.5'
     guavaVersion = '30.0-jre'
     jacksonVersion = '2.11.2'
-    springBootVersion = '2.3.4.RELEASE'
+    springBootVersion = '2.4.0'
 
     h2Version = '1.4.200'
     junitVersion = '5.7.0'
