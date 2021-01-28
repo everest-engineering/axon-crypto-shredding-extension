@@ -10,6 +10,9 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Optional;
 
+/**
+ * Service level cryptographic key management.
+ */
 @Component
 public class CryptoShreddingKeyService {
     private static final String DEFAULT_KEY_TYPE = "";
@@ -22,14 +25,12 @@ public class CryptoShreddingKeyService {
         this.secretKeyGenerator = secretKeyGenerator;
     }
 
-    public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(String keyId) {
-        return getOrCreateSecretKeyUnlessDeleted(keyId, DEFAULT_KEY_TYPE);
-    }
-
-    public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(String keyId, String keyType) {
-        return getOrCreateSecretKeyUnlessDeleted(new TypeDifferentiatedSecretKeyId(keyId, keyType));
-    }
-
+    /**
+     * Retrieve a secret key, generating it on first access unless explicitly discarded.
+     *
+     * @param keyId that uniquely identifies the key
+     * @return an optional secret key that will be missing only if the key was deleted.
+     */
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
@@ -38,14 +39,12 @@ public class CryptoShreddingKeyService {
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
     }
 
-    public Optional<SecretKey> getExistingSecretKey(String keyId) {
-        return getExistingSecretKey(keyId, DEFAULT_KEY_TYPE);
-    }
-
-    public Optional<SecretKey> getExistingSecretKey(String keyId, String keyType) {
-        return getExistingSecretKey(new TypeDifferentiatedSecretKeyId(keyId, keyType));
-    }
-
+    /**
+     * Retrieve an existing secret key.
+     *
+     * @param keyId that uniquely identifies the key
+     * @return an optional secret key
+     */
     public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
@@ -54,14 +53,13 @@ public class CryptoShreddingKeyService {
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
     }
 
-    public void deleteSecretKey(String keyId) {
-        deleteSecretKey(keyId, DEFAULT_KEY_TYPE);
-    }
-
-    public void deleteSecretKey(String keyId, String keyType) {
-        deleteSecretKey(new TypeDifferentiatedSecretKeyId(keyId, keyType));
-    }
-
+    /**
+     * Delete a secret key, rendering all fields protected by this key inaccessible.
+     * <p>
+     * <b>The encryption key table should not modified directly</b>.
+     *
+     * @param keyId that uniquely identifies the key
+     */
     public void deleteSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalSecretKey = secretKeyRepository.findById(keyId);
         var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType()));

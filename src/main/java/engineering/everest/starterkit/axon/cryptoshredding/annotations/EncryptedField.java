@@ -13,10 +13,17 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * <p>A corresponding {@code @EncryptedKeyIdentifier} must be present to
  * identify the correct encryption key for the message.
+ *
+ * @see EncryptionKeyIdentifier
  */
 @Documented
 @Retention(RUNTIME)
 @Target({ElementType.FIELD})
 public @interface EncryptedField {
+    /**
+     * Returns the type of key. This value is optional if keys are guaranteed to be globally unique.
+     *
+     * @return a string that, when combined with a key identifier, uniquely identifies an encryption key
+     */
     String keyType() default "";
 }

@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(classes = TestsJpaConfig.class)
 class CryptoShreddingKeyServiceIntegrationTest {
 
-    private static final String SECRET_KEY_ID = "secret-key-id";
+    private static final TypeDifferentiatedSecretKeyId SECRET_KEY_ID = new TypeDifferentiatedSecretKeyId("secret-key-id", "");
 
     @Autowired
     private SecretKeyRepository secretKeyRepository;

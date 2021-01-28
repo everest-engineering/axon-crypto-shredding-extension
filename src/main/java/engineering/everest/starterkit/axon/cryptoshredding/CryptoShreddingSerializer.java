@@ -32,6 +32,17 @@ import static com.google.common.base.Defaults.defaultValue;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * A wrapper around the existing Axon serializers that intercepts fields annotated with {@code @EncryptedField},
+ * encrypting them with symmetric keys that are generated and stored alongside the Axon event log and saga store.
+ * Encryption keys are identified via the {@code @EncryptionKeyIdentifier} annotation. This annotation accepts an
+ * optional keyType parameter that is used to differentiate between identifiers when key uniqueness cannot be globally
+ * guaranteed (such as when using monotonically increasing integers).
+ *
+ * A 256 bit AES (symmetric) key is generated for each {identifier, keyType} tuple. Each field annotated with
+ * {@code @EncryptedField} is encrypted using an initialisation vector unique to that field. This initialisation vector
+ * is stored as part of the serialised field payload.
+ */
 @Log4j2
 public class CryptoShreddingSerializer implements Serializer {
 
