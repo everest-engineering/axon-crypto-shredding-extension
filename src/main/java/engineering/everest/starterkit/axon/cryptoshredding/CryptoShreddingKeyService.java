@@ -71,7 +71,7 @@ public class CryptoShreddingKeyService {
     }
 
     private Optional<SecretKey> createSecretKeyOrEmptyOptional(Optional<PersistableSecretKey> optionalPersistableSecretKey) {
-        var persistableSecretKey = optionalPersistableSecretKey.get();
+        var persistableSecretKey = optionalPersistableSecretKey.orElseThrow();
         if (persistableSecretKey.getAlgorithm() == null || persistableSecretKey.getKey() == null) {
             return Optional.empty();
         }
