@@ -15,7 +15,6 @@ import java.util.Optional;
  */
 @Component
 public class CryptoShreddingKeyService {
-    private static final String DEFAULT_KEY_TYPE = "";
 
     private final SecretKeyRepository secretKeyRepository;
     private final KeyGenerator secretKeyGenerator;

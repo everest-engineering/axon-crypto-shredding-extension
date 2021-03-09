@@ -5,7 +5,7 @@ if-our-repo: &if-our-repo
     if: pipeline.repository =~ /^https:\/\/github.com\/everest-engineering\//
 
 steps:
-  - label: ':hammer: build & test'
+  - label: ':hammer: Build & test'
     agents:
       java: 11
     commands:
@@ -16,7 +16,8 @@ steps:
     agents:
       java: 11
     commands:
-      - ./gradlew sonarqube
+      - echo "We are on $BUILDKITE_BRANCH"
+      - ./gradlew sonarqube -Dsonar.branch.name=$BUILDKITE_BRANCH
 
   - wait:
     <<: *if-release
