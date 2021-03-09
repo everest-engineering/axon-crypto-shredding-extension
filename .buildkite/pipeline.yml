@@ -16,8 +16,7 @@ steps:
     agents:
       java: 11
     commands:
-      - echo "We are on $BUILDKITE_BRANCH"
-      - ./gradlew sonarqube -Dsonar.branch.name=$BUILDKITE_BRANCH
+      - ./gradlew sonarqube --console plain
 
   - wait:
     <<: *if-release
@@ -30,4 +29,3 @@ steps:
     commands:
       - git fetch --tags
       - ./gradlew bintrayPublish bintrayUpload --console plain
-
