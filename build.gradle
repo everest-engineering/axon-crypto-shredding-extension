@@ -98,7 +98,7 @@ sonarqube {
         property 'sonar.projectKey', 'everest-engineering_axon-crypto-shredding-extension'
         property 'sonar.organization', 'everestengineering'
         property 'sonar.host.url', 'https://sonarcloud.io'
-//        property 'sonar.exclusions', "*Test.java"
+        property 'sonar.test.exclusions', '**/*Test.java'
     }
 }
 
