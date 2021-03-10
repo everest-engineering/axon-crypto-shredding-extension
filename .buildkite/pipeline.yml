@@ -1,8 +1,11 @@
 if-release: &if-release
-    if: build.tag =~ /^[0-9]+\.[0-9]+\.[0-9]+\$/
+  if: build.tag =~ /^[0-9]+\.[0-9]+\.[0-9]+\$/
 
 if-our-repo: &if-our-repo
-    if: pipeline.repository =~ /^https:\/\/github.com\/everest-engineering\//
+  if: pipeline.repository =~ /^https:\/\/github.com\/everest-engineering\//
+
+if-main-branch: &if-main-branch
+  if: build.branch == 'main'
 
 steps:
   - label: ':hammer: Build & test'
@@ -13,6 +16,7 @@ steps:
 
   - label: ':sonarqube: Quality reporting'
     <<: *if-our-repo
+    <<: *if-main-branch
     agents:
       java: 11
     commands:
@@ -25,7 +29,7 @@ steps:
     <<: *if-release
     key: bintray-publish
     agents:
-      java: 11    
+      java: 11
     commands:
       - git fetch --tags
       - ./gradlew bintrayPublish bintrayUpload --console plain
