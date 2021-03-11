@@ -27,9 +27,10 @@ steps:
 
   - label: ':rocket: publish'
     <<: *if-release
-    key: bintray-publish
+    key: mavencentral-publish
     agents:
       java: 11
     commands:
       - git fetch --tags
-      - ./gradlew bintrayPublish bintrayUpload --console plain
+      - ./gradlew publishReleasePublicationToMavenCentralRepository --console plain
+

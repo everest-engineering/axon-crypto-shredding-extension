@@ -1,33 +1,24 @@
 plugins {
     id 'com.palantir.git-version' version '0.12.3'
-    id 'com.jfrog.bintray' version '1.8.4'
     id 'idea'
     id 'io.freefair.lombok' version '5.1.1'
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
     id 'org.sonarqube' version '3.1.1'
     id 'jacoco'
 }
 
 apply plugin: 'io.freefair.lombok'
 
-group = 'engineering.everest.starterkit'
+group = 'engineering.everest.axon'
 sourceCompatibility = '1.11'
-version gitVersion()
 
-repositories {
-    mavenCentral()
-}
-
-test {
-    useJUnitPlatform()
-}
-
-lombok {
-    version = '1.18.16'
-    generateLombokConfig.enabled = false
-}
+def gitTagVersion = versionDetails()
+version = gitTagVersion.commitDistance == 0
+        ? gitTagVersion.lastTag
+        : "${gitTagVersion.lastTag}+${gitTagVersion.commitDistance}-SNAPSHOT"
 
 ext {
     axonVersion = '4.4.5'
@@ -60,46 +51,25 @@ dependencies {
     testRuntimeOnly "com.h2database:h2:${h2Version}"
 }
 
-bintray {
-    user = System.getenv('BINTRAY_USER')
-    key = System.getenv('BINTRAY_KEY')
-    publications = ['maven']
-    pkg {
-        repo = 'starterkit'
-        name = rootProject.name
-        userOrg = 'everestengineering'
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/everestengineering/starterkit-axon-crypto-shredding-extension'
-    }
-    publish = true
-}
-
-publishing {
-    publications {
-        maven(MavenPublication) {
-            from components.java
-        }
+java {
+    java {
+        withJavadocJar()
+        withSourcesJar()
     }
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        csv.enabled false
-        html.enabled true
-    }
+repositories {
+    mavenCentral()
 }
 
-test.finalizedBy jacocoTestReport
-
-sonarqube {
-    properties {
-        property "sonar.projectName", "Axon crypto shredding extension"
-        property 'sonar.projectKey', 'everest-engineering_axon-crypto-shredding-extension'
-        property 'sonar.organization', 'everestengineering'
-        property 'sonar.host.url', 'https://sonarcloud.io'
-        property 'sonar.test.exclusions', '**/*Test.java'
-    }
+test {
+    useJUnitPlatform()
 }
 
-tasks['sonarqube'].dependsOn test
+lombok {
+    version = '1.18.16'
+    generateLombokConfig.enabled = false
+}
+
+apply from: 'publishing.gradle'
+apply from: 'sonar.gradle'

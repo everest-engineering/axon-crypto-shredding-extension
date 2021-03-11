@@ -1,0 +1,20 @@
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+test.finalizedBy jacocoTestReport
+
+sonarqube {
+    properties {
+        property 'sonar.projectName', 'Axon crypto shredding extension'
+        property 'sonar.projectKey', 'everest-engineering_axon-crypto-shredding-extension'
+        property 'sonar.organization', 'everestengineering'
+        property 'sonar.host.url', 'https://sonarcloud.io'
+        property 'sonar.test.exclusions', '**/*Test.java'
+    }
+}
+
+tasks['sonarqube'].dependsOn test

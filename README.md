@@ -1,13 +1,13 @@
 # Crypro shredding extensions for Axon
 [![Build status](https://badge.buildkite.com/a6ee63e1007ea8475194fe1dea40c821d9cd7129a40397365f.svg)](https://buildkite.com/everest-engineering/axon-crypto-shredding-extension) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=everest-engineering_axon-crypto-shredding-extension&metric=alert_status)](https://sonarcloud.io/dashboard?id=everest-engineering_axon-crypto-shredding-extension)
 
-This is a supporting repository for [Lhotse](https://github.com/everest-engineering/lhotse), a starter kit for writing 
+This is a standalone library as well as a supporting repository for [Lhotse](https://github.com/everest-engineering/lhotse), a starter kit for writing
 event sourced web applications following domain driven design principles.
 
-This library implements crypto shredding for the Axon event log and saga store. Crypto shredding is a technique for 
-disabling access to sensitive information by discarding encryption keys. You might use this on the behest of a user or 
+This library implements crypto shredding for the Axon event log and saga store. Crypto shredding is a technique for
+disabling access to sensitive information by discarding encryption keys. You might use this on the behest of a user or
 when retention is no longer justified in order to comply with the European Union's General Data Protection Regulation (GDPR)
-without compromising the append-only nature of your event log.  
+without compromising the append-only nature of your event log.
 
 ## How it works
 The extension wraps the existing Axon serializers and intercepts fields annotated with `@EncryptedField`, encrypting them
