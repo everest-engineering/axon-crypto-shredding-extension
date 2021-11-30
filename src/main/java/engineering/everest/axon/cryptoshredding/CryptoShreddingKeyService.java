@@ -27,8 +27,8 @@ public class CryptoShreddingKeyService {
     /**
      * Retrieve a secret key, generating it on first access unless explicitly discarded.
      *
-     * @param keyId that uniquely identifies the key
-     * @return an optional secret key that will be missing only if the key was deleted.
+     * @param  keyId that uniquely identifies the key
+     * @return       an optional secret key that will be missing only if the key was deleted.
      */
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
@@ -41,8 +41,8 @@ public class CryptoShreddingKeyService {
     /**
      * Retrieve an existing secret key.
      *
-     * @param keyId that uniquely identifies the key
-     * @return an optional secret key
+     * @param  keyId that uniquely identifies the key
+     * @return       an optional secret key
      */
     public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);

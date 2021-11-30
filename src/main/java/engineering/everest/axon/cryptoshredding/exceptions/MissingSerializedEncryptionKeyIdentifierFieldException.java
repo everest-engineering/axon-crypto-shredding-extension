@@ -1,4 +1,3 @@
 package engineering.everest.axon.cryptoshredding.exceptions;
 
-public class MissingSerializedEncryptionKeyIdentifierFieldException extends RuntimeException {
-}
+public class MissingSerializedEncryptionKeyIdentifierFieldException extends RuntimeException {}

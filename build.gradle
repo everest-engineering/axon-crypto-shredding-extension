@@ -6,6 +6,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.sonarqube' version '3.3'
+    id 'com.diffplug.spotless' version '6.0.0'
     id 'jacoco'
 }
 
@@ -59,6 +60,21 @@ java {
     java {
         withJavadocJar()
         withSourcesJar()
+    }
+}
+
+spotless {
+    format 'misc', {
+        target '*.gradle', '*.md', '.gitignore'
+        trimTrailingWhitespace()
+        indentWithSpaces(4)
+        endWithNewline()
+    }
+    java {
+        eclipse().configFile("$rootDir/eclipse-formatter-config.xml")
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        removeUnusedImports()
     }
 }
 

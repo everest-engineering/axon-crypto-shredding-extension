@@ -16,5 +16,5 @@ public class EventWithDifferentiatedKeyType {
     @EncryptionKeyIdentifier(keyType = "some-tag")
     private long aLongIdThatNeedsAdditionalType;
     @EncryptedField(keyType = "some-tag")
-    private String aStringField;    
+    private String aStringField;
 }

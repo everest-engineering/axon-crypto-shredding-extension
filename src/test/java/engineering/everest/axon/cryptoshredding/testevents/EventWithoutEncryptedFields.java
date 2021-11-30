@@ -15,14 +15,14 @@ public class EventWithoutEncryptedFields {
 
     public static EventWithoutEncryptedFields createTestInstance() {
         return new EventWithoutEncryptedFields(
-                "Default string",
-                42,
-                9600L,
-                123.456789012345f,
-                UUID.fromString("deadbeef-dead-beef-dead-beef00000042"),
-                98765432L,
-                65535,
-                "I am a byte array".getBytes());
+            "Default string",
+            42,
+            9600L,
+            123.456789012345f,
+            UUID.fromString("deadbeef-dead-beef-dead-beef00000042"),
+            98765432L,
+            65535,
+            "I am a byte array".getBytes());
     }
 
     private String aStringField;

@@ -9,8 +9,8 @@ import javax.persistence.Embeddable;
 import java.io.Serializable;
 
 /**
- * Secret key identifier that includes a {@code keyType} parameter. This is used to differentiate between identifiers
- * when key uniqueness cannot be globally guaranteed (such as when using monotonically increasing integers).
+ * Secret key identifier that includes a {@code keyType} parameter. This is used to differentiate between identifiers when key uniqueness
+ * cannot be globally guaranteed (such as when using monotonically increasing integers).
  *
  * @see EncryptionKeyIdentifier
  */
@@ -18,8 +18,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public
-class TypeDifferentiatedSecretKeyId implements Serializable {
+public class TypeDifferentiatedSecretKeyId implements Serializable {
     private String keyId;
     private String keyType;
 }

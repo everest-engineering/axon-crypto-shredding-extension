@@ -8,14 +8,13 @@ import java.lang.annotation.Target;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Marks the field in an Axon message (e.g., event) that identifies the
- * encryption key used to protect sensitive fields.
+ * Marks the field in an Axon message (e.g., event) that identifies the encryption key used to protect sensitive fields.
  *
  * @see EncryptedField
  */
 @Documented
 @Retention(RUNTIME)
-@Target({ElementType.FIELD})
+@Target({ ElementType.FIELD })
 public @interface EncryptionKeyIdentifier {
     /**
      * Returns the type of key. This value is optional if keys are guaranteed to be globally unique.

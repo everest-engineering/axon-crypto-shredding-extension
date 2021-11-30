@@ -28,9 +28,12 @@ class DefaultAesDecrypter implements Decrypter {
     public String decrypt(SecretKey secretKey, byte[] initializationVectorAndCipherText) {
         try {
             var cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-            cipher.init(DECRYPT_MODE, secretKey, new GCMParameterSpec(AUTHENTICATION_TAG_SIZE_BITS, initializationVectorAndCipherText, 0, INITIALIZATION_VECTOR_LENGTH_BYTES), secureRandom);
-            return new String(cipher.doFinal(initializationVectorAndCipherText, INITIALIZATION_VECTOR_LENGTH_BYTES, initializationVectorAndCipherText.length - INITIALIZATION_VECTOR_LENGTH_BYTES));
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            cipher.init(DECRYPT_MODE, secretKey, new GCMParameterSpec(AUTHENTICATION_TAG_SIZE_BITS, initializationVectorAndCipherText, 0,
+                INITIALIZATION_VECTOR_LENGTH_BYTES), secureRandom);
+            return new String(cipher.doFinal(initializationVectorAndCipherText, INITIALIZATION_VECTOR_LENGTH_BYTES,
+                initializationVectorAndCipherText.length - INITIALIZATION_VECTOR_LENGTH_BYTES));
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException
+                 | IllegalBlockSizeException | BadPaddingException e) {
             throw new RuntimeException(e);
         }
     }

@@ -32,7 +32,8 @@ class DefaultAesEncrypter implements Encrypter {
             byte[] initializationVector = createInitializationVector();
             cipher.init(ENCRYPT_MODE, secretKey, new GCMParameterSpec(AUTHENTICATION_TAG_SIZE_BITS, initializationVector), secureRandom);
             return concatInitializationVectorAndCipherText(initializationVector, cipher.doFinal(cleartext.getBytes()));
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | BadPaddingException | IllegalBlockSizeException e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException
+                 | BadPaddingException | IllegalBlockSizeException e) {
             throw new RuntimeException(e);
         }
     }
