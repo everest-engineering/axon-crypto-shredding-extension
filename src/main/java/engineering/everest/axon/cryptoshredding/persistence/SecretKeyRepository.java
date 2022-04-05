@@ -10,7 +10,7 @@ import javax.crypto.SecretKey;
 public interface SecretKeyRepository extends JpaRepository<PersistableSecretKey, TypeDifferentiatedSecretKeyId> {
 
     default SecretKey create(TypeDifferentiatedSecretKeyId keyId, SecretKey key) {
-        save(new PersistableSecretKey(keyId, key.getEncoded(), key.getAlgorithm()));
+        saveAndFlush(new PersistableSecretKey(keyId, key.getEncoded(), key.getAlgorithm()));
         return key;
     }
 }

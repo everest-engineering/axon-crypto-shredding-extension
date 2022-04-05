@@ -90,8 +90,8 @@ public class CryptoShreddingSerializer implements Serializer {
         }
 
         var encryptedSerializedType = new SimpleSerializedType(HashMap.class.getCanonicalName(), serializedObject.getType().getRevision());
-        var encryptedSerializedObject =
-            new SimpleSerializedObject<>(serializedObject.getData(), serializedObject.getContentType(), encryptedSerializedType);
+        var encryptedSerializedObject = new SimpleSerializedObject<>(
+            serializedObject.getData(), serializedObject.getContentType(), encryptedSerializedType);
         Map<String, Object> encryptedMappedObject = wrappedSerializer.deserialize(encryptedSerializedObject);
         var serializedFieldNameMapping = buildFieldNamingSerializationStrategyIndependentMapping(encryptedMappedObject);
         var optionalSecretKey = retrieveSecretKeyForDeserialization(encryptedMappedObject, serializedFieldNameMapping, fields);
@@ -131,8 +131,8 @@ public class CryptoShreddingSerializer implements Serializer {
 
         var secretKeyIdentifier = extractSecretKeyIdentifier(object, optionalField.get());
         var optionalSecretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(secretKeyIdentifier);
-        return optionalSecretKey
-            .orElseThrow(() -> new EncryptionKeyDeletedException(secretKeyIdentifier.getKeyId(), secretKeyIdentifier.getKeyType()));
+        return optionalSecretKey.orElseThrow(
+            () -> new EncryptionKeyDeletedException(secretKeyIdentifier.getKeyId(), secretKeyIdentifier.getKeyType()));
     }
 
     private Optional<SecretKey> retrieveSecretKeyForDeserialization(Map<String, Object> encryptedMappedObject,
@@ -153,8 +153,8 @@ public class CryptoShreddingSerializer implements Serializer {
         if (secretKeyIdentifier == null || secretKeyIdentifier.isBlank()) {
             throw new MissingSerializedEncryptionKeyIdentifierFieldException();
         }
-        return cryptoShreddingKeyService
-            .getExistingSecretKey(new TypeDifferentiatedSecretKeyId(secretKeyIdentifier, secretKeyIdentifierFieldKeyType));
+        return cryptoShreddingKeyService.getExistingSecretKey(
+            new TypeDifferentiatedSecretKeyId(secretKeyIdentifier, secretKeyIdentifierFieldKeyType));
     }
 
     private Optional<Field> findOptionalSecretKeyIdentifierField(List<Field> fields) {

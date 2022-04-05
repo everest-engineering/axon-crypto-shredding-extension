@@ -37,7 +37,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
     void getOrCreateSecretKeyUnlessDeleted_WillCreateSecretKeyOnFirstGet() {
         var secretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
 
-        assertEquals("AES", secretKey.get().getAlgorithm());
+        assertEquals("AES", secretKey.orElseThrow().getAlgorithm());
     }
 
     @Test
@@ -53,7 +53,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
         var secretKey1 = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
         var secretKey2 = cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID);
 
-        assertEquals(secretKey1.get(), secretKey2.get());
+        assertEquals(secretKey1.orElseThrow(), secretKey2.orElseThrow());
     }
 
     @Test
@@ -80,6 +80,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
 
     @Test
     void deletingANonExistentKey_WillFail() {
-        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID));
+        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.deleteSecretKey(
+            new TypeDifferentiatedSecretKeyId("does not exist", "")));
     }
 }

@@ -4,6 +4,7 @@ import engineering.everest.axon.cryptoshredding.encryption.KeyGenerator;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
 import engineering.everest.axon.cryptoshredding.persistence.PersistableSecretKey;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -14,6 +15,7 @@ import java.util.Optional;
  * Service level cryptographic key management.
  */
 @Component
+@Slf4j
 public class CryptoShreddingKeyService {
 
     private final SecretKeyRepository secretKeyRepository;
@@ -33,9 +35,10 @@ public class CryptoShreddingKeyService {
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
+            LOGGER.trace("Creating crypto shredding key {}", keyId);
             return Optional.of(secretKeyRepository.create(keyId, secretKeyGenerator.generateKey()));
         }
-        return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
+        return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey.get());
     }
 
     /**
@@ -49,7 +52,8 @@ public class CryptoShreddingKeyService {
         if (optionalPersistableSecretKey.isEmpty()) {
             throw new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType());
         }
-        return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey);
+        LOGGER.trace("Retrieved crypto shredding key {}", keyId);
+        return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey.get());
     }
 
     /**
@@ -66,11 +70,11 @@ public class CryptoShreddingKeyService {
             secretKey.setAlgorithm(null);
             secretKey.setKey(null);
             secretKeyRepository.save(secretKey);
+            LOGGER.trace("Permanently deleted crypto shredding key {}", keyId);
         }
     }
 
-    private Optional<SecretKey> createSecretKeyOrEmptyOptional(Optional<PersistableSecretKey> optionalPersistableSecretKey) {
-        var persistableSecretKey = optionalPersistableSecretKey.orElseThrow();
+    private Optional<SecretKey> createSecretKeyOrEmptyOptional(PersistableSecretKey persistableSecretKey) {
         if (persistableSecretKey.getAlgorithm() == null || persistableSecretKey.getKey() == null) {
             return Optional.empty();
         }
