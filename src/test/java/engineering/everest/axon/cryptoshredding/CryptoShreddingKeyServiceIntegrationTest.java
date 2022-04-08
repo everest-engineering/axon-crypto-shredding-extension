@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
+import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,8 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ContextConfiguration(classes = TestsJpaConfig.class)
 class CryptoShreddingKeyServiceIntegrationTest {
 
-    private static final TypeDifferentiatedSecretKeyId SECRET_KEY_ID = new TypeDifferentiatedSecretKeyId("secret-key-id", "");
-
     @Autowired
     private SecretKeyRepository secretKeyRepository;
     @Autowired
@@ -35,52 +34,61 @@ class CryptoShreddingKeyServiceIntegrationTest {
 
     @Test
     void getOrCreateSecretKeyUnlessDeleted_WillCreateSecretKeyOnFirstGet() {
-        var secretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
+        var secretKey = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(generateKeyId());
 
         assertEquals("AES", secretKey.orElseThrow().getAlgorithm());
     }
 
     @Test
     void getOrCreateSecretKeyUnlessDeleted_WillReturnEmptyOptional_WhenKeyHasBeenDeleted() {
-        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
+        var keyId = generateKeyId();
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        cryptoShreddingKeyService.deleteSecretKey(keyId);
 
-        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
+        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId).isEmpty());
     }
 
     @Test
     void getExistingSecretKey_WillRetrievePreviouslyCreatedKey() {
-        var secretKey1 = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        var secretKey2 = cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID);
+        var keyId = generateKeyId();
+        var secretKey1 = cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        var secretKey2 = cryptoShreddingKeyService.getExistingSecretKey(keyId);
 
         assertEquals(secretKey1.orElseThrow(), secretKey2.orElseThrow());
     }
 
     @Test
     void getExistingSecretKey_WillFailWhenKeyNotCreated() {
-        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID));
+
+        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.getExistingSecretKey(generateKeyId()));
     }
 
     @Test
     void getExistingSecretKey_WillReturnEmptyOptional_WhenKeyPreviouslyCreatedAndDeleted() {
-        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
+        var keyId = generateKeyId();
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        cryptoShreddingKeyService.deleteSecretKey(keyId);
 
-        assertEquals(Optional.empty(), cryptoShreddingKeyService.getExistingSecretKey(SECRET_KEY_ID));
+        assertEquals(Optional.empty(), cryptoShreddingKeyService.getExistingSecretKey(keyId));
     }
 
     @Test
     void keysAreIdempotentlyDeleted() {
-        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID);
-        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
-        cryptoShreddingKeyService.deleteSecretKey(SECRET_KEY_ID);
+        var keyId = generateKeyId();
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        cryptoShreddingKeyService.deleteSecretKey(keyId);
 
-        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(SECRET_KEY_ID).isEmpty());
+        assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId).isEmpty());
     }
 
     @Test
     void deletingANonExistentKey_WillFail() {
         assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.deleteSecretKey(
             new TypeDifferentiatedSecretKeyId("does not exist", "")));
+    }
+
+    private TypeDifferentiatedSecretKeyId generateKeyId() {
+        return new TypeDifferentiatedSecretKeyId(randomUUID().toString(), "");
     }
 }

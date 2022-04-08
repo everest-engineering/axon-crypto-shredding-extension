@@ -6,10 +6,13 @@ import engineering.everest.axon.cryptoshredding.persistence.PersistableSecretKey
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Optional;
+
+import static org.springframework.transaction.annotation.Isolation.READ_UNCOMMITTED;
 
 /**
  * Service level cryptographic key management.
@@ -47,6 +50,7 @@ public class CryptoShreddingKeyService {
      * @param  keyId that uniquely identifies the key
      * @return       an optional secret key
      */
+    @Transactional(isolation = READ_UNCOMMITTED)
     public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {

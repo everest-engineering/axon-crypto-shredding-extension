@@ -3,17 +3,17 @@ package engineering.everest.axon.cryptoshredding.encryption;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import engineering.everest.axon.cryptoshredding.CryptoShreddingKeyService;
 import engineering.everest.axon.cryptoshredding.CryptoShreddingSerializer;
-import engineering.everest.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
-import engineering.everest.axon.cryptoshredding.testevents.EventWithEncryptedFields;
-import engineering.everest.axon.cryptoshredding.testevents.EventWithMissingEncryptionKeyIdentifierAnnotation;
-import engineering.everest.axon.cryptoshredding.testevents.EventWithUnsupportedEncryptionKeyIdentifierType;
-import engineering.everest.axon.cryptoshredding.testevents.EventWithoutEncryptedFields;
 import engineering.everest.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
 import engineering.everest.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithEncryptedFields;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithMissingEncryptionKeyIdentifierAnnotation;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithUnsupportedEncryptionKeyIdentifierType;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithoutEncryptedFields;
 import org.axonframework.serialization.Converter;
 import org.axonframework.serialization.Serializer;
 import org.axonframework.serialization.SimpleSerializedObject;
@@ -64,10 +64,10 @@ class CryptoShreddingSerializerTest {
 
     @BeforeEach
     void setUp() {
-        cryptoShreddingSerializerWithMock =
-            new CryptoShreddingSerializer(mockWrappedSerializer, cryptoShreddingKeyService, encrypterFactory, new ObjectMapper());
-        jsonCryptoShreddingSerializer = new CryptoShreddingSerializer(JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService,
-            encrypterFactory, new ObjectMapper());
+        cryptoShreddingSerializerWithMock = new CryptoShreddingSerializer(
+            mockWrappedSerializer, cryptoShreddingKeyService, encrypterFactory, new ObjectMapper());
+        jsonCryptoShreddingSerializer = new CryptoShreddingSerializer(
+            JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService, encrypterFactory, new ObjectMapper());
         var secureRandom = new SecureRandom();
         defaultAesEncrypter = new DefaultAesEncrypter(secureRandom);
         defaultAesDecrypter = new DefaultAesDecrypter(secureRandom);
@@ -99,7 +99,6 @@ class CryptoShreddingSerializerTest {
 
         assertThrows(EncryptionKeyDeletedException.class,
             () -> jsonCryptoShreddingSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class));
-
     }
 
     @Test
@@ -202,9 +201,8 @@ class CryptoShreddingSerializerTest {
             new SimpleSerializedObject<>(mangledPayload, byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
-        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class, () -> {
-            EventWithEncryptedFields deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
-        });
+        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class,
+            () -> jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent));
     }
 
     @Test
@@ -219,9 +217,8 @@ class CryptoShreddingSerializerTest {
             new SimpleSerializedObject<>(mangledPayload, byte[].class,
                 new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), null));
 
-        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class, () -> {
-            EventWithEncryptedFields deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
-        });
+        assertThrows(MissingSerializedEncryptionKeyIdentifierFieldException.class,
+            () -> jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent));
     }
 
     @Test
@@ -235,10 +232,8 @@ class CryptoShreddingSerializerTest {
             new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithMissingEncryptionKeyIdentifierAnnotation.class.getCanonicalName(), REVISION_NUMBER));
 
-        assertThrows(MissingEncryptionKeyIdentifierAnnotation.class, () -> {
-            EventWithMissingEncryptionKeyIdentifierAnnotation deserialized =
-                jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
-        });
+        assertThrows(MissingEncryptionKeyIdentifierAnnotation.class,
+            () -> jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent));
     }
 
     @Test
