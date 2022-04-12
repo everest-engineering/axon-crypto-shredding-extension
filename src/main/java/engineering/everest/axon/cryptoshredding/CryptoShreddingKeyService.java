@@ -12,7 +12,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Optional;
 
-import static org.springframework.transaction.annotation.Isolation.READ_UNCOMMITTED;
+import static org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED;
 
 /**
  * Service level cryptographic key management.
@@ -35,10 +35,11 @@ public class CryptoShreddingKeyService {
      * @param  keyId that uniquely identifies the key
      * @return       an optional secret key that will be missing only if the key was deleted.
      */
+    @Transactional(propagation = NOT_SUPPORTED)
     public Optional<SecretKey> getOrCreateSecretKeyUnlessDeleted(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
-            LOGGER.trace("Creating crypto shredding key {}", keyId);
+            LOGGER.trace("Creating crypto shredding key {}", keyId.toString());
             return Optional.of(secretKeyRepository.create(keyId, secretKeyGenerator.generateKey()));
         }
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey.get());
@@ -50,13 +51,13 @@ public class CryptoShreddingKeyService {
      * @param  keyId that uniquely identifies the key
      * @return       an optional secret key
      */
-    @Transactional(isolation = READ_UNCOMMITTED)
+    @Transactional(propagation = NOT_SUPPORTED)
     public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
             throw new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType());
         }
-        LOGGER.trace("Retrieved crypto shredding key {}", keyId);
+        LOGGER.trace("Retrieved crypto shredding key {}", keyId.toString());
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey.get());
     }
 
@@ -67,6 +68,7 @@ public class CryptoShreddingKeyService {
      *
      * @param keyId that uniquely identifies the key
      */
+    @Transactional(propagation = NOT_SUPPORTED)
     public void deleteSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalSecretKey = secretKeyRepository.findById(keyId);
         var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType()));
@@ -74,7 +76,7 @@ public class CryptoShreddingKeyService {
             secretKey.setAlgorithm(null);
             secretKey.setKey(null);
             secretKeyRepository.save(secretKey);
-            LOGGER.trace("Permanently deleted crypto shredding key {}", keyId);
+            LOGGER.trace("Permanently deleted crypto shredding key {}", keyId.toString());
         }
     }
 
