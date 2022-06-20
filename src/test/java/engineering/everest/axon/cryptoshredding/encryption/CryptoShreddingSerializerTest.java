@@ -4,14 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import engineering.everest.axon.cryptoshredding.CryptoShreddingKeyService;
 import engineering.everest.axon.cryptoshredding.CryptoShreddingSerializer;
 import engineering.everest.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
+import engineering.everest.axon.cryptoshredding.exceptions.DuplicateEncryptionKeyIdentifierFieldTagException;
 import engineering.everest.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
-import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotation;
+import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotationException;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
+import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncryptionKeyIdentifierException;
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithEncryptedFields;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithMismatchedMultipleEncryptionKeyIdentifierTags;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithMissingEncryptionKeyIdentifierAnnotation;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithMultipleUntaggedEncryptionKeyIdentifierAnnotations;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithUnsupportedEncryptionKeyIdentifierType;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithoutEncryptedFields;
 import org.axonframework.serialization.Converter;
@@ -108,16 +113,42 @@ class CryptoShreddingSerializerTest {
     }
 
     @Test
+    void serialize_WillFail_WhenMultipleUntaggedEncryptionKeyIdentifierAnnotationsPresent() {
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+
+        var exception = assertThrows(DuplicateEncryptionKeyIdentifierFieldTagException.class,
+            () -> jsonCryptoShreddingSerializer.serialize(EventWithMultipleUntaggedEncryptionKeyIdentifierAnnotations.createTestInstance(),
+                byte[].class));
+        assertEquals(
+            "Duplicated field tag found for encryption key identifier annotation on 'keyIdentifier2' with tag ''.  Use tags to distinguish between multiple encryption key identifiers.",
+            exception.getMessage());
+    }
+
+    @Test
     void serialize_WillFail_WhenEncryptionKeyIdentifierAnnotationIsMissing() {
-        assertThrows(MissingEncryptionKeyIdentifierAnnotation.class,
+        assertThrows(MissingEncryptionKeyIdentifierAnnotationException.class,
             () -> jsonCryptoShreddingSerializer.serialize(new EventWithMissingEncryptionKeyIdentifierAnnotation(), byte[].class));
     }
 
     @Test
+    void serialize_WillFail_WhenFieldTagsMismatchedWithEncryptionKeyIdentifierTags() {
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(new TypeDifferentiatedSecretKeyId("key-identifier-2", "")))
+            .thenReturn(Optional.of(ENCRYPTION_KEY));
+
+        var exception = assertThrows(MissingTaggedEncryptionKeyIdentifierException.class,
+            () -> jsonCryptoShreddingSerializer.serialize(EventWithMismatchedMultipleEncryptionKeyIdentifierTags.createTestInstance(),
+                byte[].class));
+        assertEquals("Missing a corresponding encryption key identifier for field 'fieldForSecondKey' with tag 'oopsie-mismatched-tag'.",
+            exception.getMessage());
+    }
+
+    @Test
     void deserialize_WillSkipDecryptingUnencryptedEvents() {
-        SimpleSerializedType serializedType =
-            new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER);
-        SimpleSerializedObject<byte[]> serializedEvent =
+        var serializedType = new SimpleSerializedType(EventWithoutEncryptedFields.class.getCanonicalName(), REVISION_NUMBER);
+        var serializedEvent =
             new SimpleSerializedObject<>(EVENT_WITHOUT_ANNOTATIONS_SERIALIZED_JSON.getBytes(), byte[].class, serializedType);
 
         assertEquals(EventWithoutEncryptedFields.createTestInstance(), jsonCryptoShreddingSerializer.deserialize(serializedEvent));
@@ -232,8 +263,30 @@ class CryptoShreddingSerializerTest {
             new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
                 new SimpleSerializedType(EventWithMissingEncryptionKeyIdentifierAnnotation.class.getCanonicalName(), REVISION_NUMBER));
 
-        assertThrows(MissingEncryptionKeyIdentifierAnnotation.class,
+        assertThrows(MissingEncryptionKeyIdentifierAnnotationException.class,
             () -> jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent));
+    }
+
+    @Test
+    void deserialize_WillFail_WhenFieldTagsMismatchedWithEncryptionKeyIdentifierTags() {
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        var keyIdentifier2 = new TypeDifferentiatedSecretKeyId("key-identifier-2", "");
+        var secondEncryptionKey = new SecretKeySpec("1111111111111111".getBytes(), "AES");
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyIdentifier2)).thenReturn(Optional.of(secondEncryptionKey));
+
+        var serializedAndEncryptedEvent =
+            jsonCryptoShreddingSerializer.serialize(EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations.createTestInstance(),
+                byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+            new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
+                new SimpleSerializedType(EventWithMismatchedMultipleEncryptionKeyIdentifierTags.class.getCanonicalName(), REVISION_NUMBER));
+
+        var exception = assertThrows(MissingTaggedEncryptionKeyIdentifierException.class,
+            () -> jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent));
+
+        assertEquals("Missing a corresponding encryption key identifier for field 'fieldForSecondKey' with tag 'oopsie-mismatched-tag'.",
+            exception.getMessage());
     }
 
     @Test
@@ -253,6 +306,58 @@ class CryptoShreddingSerializerTest {
         EventWithDifferentiatedKeyType deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
 
         assertEquals(eventWithDifferentiatedKeyType, deserialized);
+    }
+
+    @Test
+    void fieldTagCanBeUsedToDifferentiateBetweenMultipleEncryptionKeyIdentifiers() {
+        var keyIdentifier2 = new TypeDifferentiatedSecretKeyId("key-identifier-2", "");
+        var secondEncryptionKey = new SecretKeySpec("1111111111111111".getBytes(), "AES");
+
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyIdentifier2)).thenReturn(Optional.of(secondEncryptionKey));
+        when(cryptoShreddingKeyService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getExistingSecretKey(keyIdentifier2)).thenReturn(Optional.of(secondEncryptionKey));
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+        when(encrypterFactory.createDecrypter()).thenReturn(defaultAesDecrypter);
+
+        var eventWithMultipleTaggedEncryptionKeyIdentifiers =
+            EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations.createTestInstance();
+        var serializedAndEncryptedEvent =
+            jsonCryptoShreddingSerializer.serialize(eventWithMultipleTaggedEncryptionKeyIdentifiers, byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+            new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
+                new SimpleSerializedType(EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations.class.getCanonicalName(),
+                    REVISION_NUMBER));
+        var deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+
+        assertEquals(eventWithMultipleTaggedEncryptionKeyIdentifiers, deserialized);
+    }
+
+    @Test
+    void canPartiallyDeserialize_WhenOneOfMultipleEncryptionKeyIdentifiersShredded() {
+        var keyIdentifier2 = new TypeDifferentiatedSecretKeyId("key-identifier-2", "");
+        var secondEncryptionKey = new SecretKeySpec("1111111111111111".getBytes(), "AES");
+
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyIdentifier2)).thenReturn(Optional.of(secondEncryptionKey));
+        when(cryptoShreddingKeyService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.empty());
+        when(cryptoShreddingKeyService.getExistingSecretKey(keyIdentifier2)).thenReturn(Optional.of(secondEncryptionKey));
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+        when(encrypterFactory.createDecrypter()).thenReturn(defaultAesDecrypter);
+
+        var eventWithMultipleTaggedEncryptionKeyIdentifiers =
+            EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations.createTestInstance();
+        var serializedAndEncryptedEvent =
+            jsonCryptoShreddingSerializer.serialize(eventWithMultipleTaggedEncryptionKeyIdentifiers, byte[].class);
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+            new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
+                new SimpleSerializedType(EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations.class.getCanonicalName(),
+                    REVISION_NUMBER));
+        var deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+
+        var expectedPartiallyDeserialized = new EventWithMultipleTaggedEncryptionKeyIdentifierAnnotations(
+            "key-identifier", "key-identifier-2", null, "I'm not the other string");
+        assertEquals(expectedPartiallyDeserialized, deserialized);
     }
 
     @Test

@@ -25,4 +25,13 @@ public @interface EncryptedField {
      * @return a string that, when combined with a key identifier, uniquely identifies an encryption key
      */
     String keyType() default "";
+
+    /**
+     * Returns an arbitrary tag used to assign fields to their encryption keys. This value is optional if only a single key identifier is
+     * present in a payload. The tag is used to assign an encryption key to one or more fields when multiple key identifiers exist for a
+     * payload.
+     *
+     * @return a string that assigns the encryption key identifier to one or more fields in a payload.
+     */
+    String tag() default "";
 }
