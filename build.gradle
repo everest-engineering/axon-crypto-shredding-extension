@@ -6,7 +6,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.sonarqube' version '3.4.0.2513'
-    id 'com.diffplug.spotless' version '6.6.0'
+    id 'com.diffplug.spotless' version '6.11.0'
     id 'jacoco'
 }
 
@@ -18,15 +18,15 @@ version = gitTagVersion.commitDistance == 0
         : "${gitTagVersion.lastTag}+${gitTagVersion.commitDistance}-SNAPSHOT"
 
 ext {
-    axonVersion = '4.5.10'
+    axonVersion = '4.6.0'
     guavaVersion = '31.1-jre'
     jacksonVersion = '2.13.1'
     lombokVersion = '1.18.24'
-    springBootVersion = '2.7.0'
+    springBootVersion = '2.7.4'
 
     h2Version = '1.4.200'
-    junitVersion = '5.8.2'
-    mockitoVersion = '4.6.1'
+    junitVersion = '5.9.0'
+    mockitoVersion = '4.8.0'
 }
 
 dependencyManagement {

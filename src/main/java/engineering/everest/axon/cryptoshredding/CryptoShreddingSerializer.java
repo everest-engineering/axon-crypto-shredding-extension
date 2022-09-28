@@ -39,8 +39,8 @@ import static java.util.stream.Collectors.toMap;
  * symmetric keys that are generated and stored alongside the Axon event log and saga store. Encryption keys are identified via the
  * {@code @EncryptionKeyIdentifier} annotation. This annotation accepts an optional keyType parameter that is used to differentiate between
  * identifiers when key uniqueness cannot be globally guaranteed (such as when using monotonically increasing integers).
- *
- * A 256 bit AES (symmetric) key is generated for each {identifier, keyType} tuple. Each field annotated with {@code @EncryptedField} is
+ * <p>
+ * A 256-bit AES (symmetric) key is generated for each {identifier, keyType} tuple. Each field annotated with {@code @EncryptedField} is
  * encrypted using an initialisation vector unique to that field. This initialisation vector is stored as part of the serialised field
  * payload.
  */
