@@ -1,11 +1,11 @@
 package engineering.everest.axon.cryptoshredding;
 
 import engineering.everest.axon.cryptoshredding.annotations.EncryptionKeyIdentifier;
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Embeddable;
 import java.io.Serializable;
 
 /**

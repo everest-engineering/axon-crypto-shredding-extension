@@ -11,7 +11,7 @@ import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyI
 import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncryptionKeyIdentifierException;
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.axonframework.common.ObjectUtils;
 import org.axonframework.serialization.Converter;
 import org.axonframework.serialization.SerializedObject;
@@ -44,7 +44,7 @@ import static java.util.stream.Collectors.toMap;
  * encrypted using an initialisation vector unique to that field. This initialisation vector is stored as part of the serialised field
  * payload.
  */
-@Log4j2
+@Slf4j
 public class CryptoShreddingSerializer implements Serializer {
 
     private final Serializer wrappedSerializer;

@@ -1,12 +1,12 @@
 plugins {
     id 'com.palantir.git-version' version '0.15.0'
     id 'idea'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'io.spring.dependency-management' version '1.1.0'
     id 'java-library'
     id 'maven-publish'
     id 'signing'
     id 'org.sonarqube' version '3.4.0.2513'
-    id 'com.diffplug.spotless' version '6.11.0'
+    id 'com.diffplug.spotless' version '6.12.0'
     id 'jacoco'
 }
 
@@ -18,11 +18,11 @@ version = gitTagVersion.commitDistance == 0
         : "${gitTagVersion.lastTag}+${gitTagVersion.commitDistance}-SNAPSHOT"
 
 ext {
-    axonVersion = '4.6.0'
+    axonVersion = '4.7.1'
     guavaVersion = '31.1-jre'
     jacksonVersion = '2.13.1'
     lombokVersion = '1.18.24'
-    springBootVersion = '2.7.4'
+    springBootVersion = '3.0.2'
 
     h2Version = '1.4.200'
     junitVersion = '5.9.0'
@@ -55,7 +55,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(17)
     }
     java {
         withJavadocJar()
