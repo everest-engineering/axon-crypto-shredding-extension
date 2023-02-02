@@ -2,29 +2,31 @@ package engineering.everest.axon.cryptoshredding;
 
 import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
+import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.parallel.Execution;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
+import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.DatabaseType.POSTGRES;
+import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_EACH_TEST_METHOD;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 
-@ExtendWith(SpringExtension.class)
+@AutoConfigureEmbeddedDatabase(refresh = AFTER_EACH_TEST_METHOD, type = POSTGRES)
 @DataJpaTest
+@EnableAutoConfiguration
 @ComponentScan(basePackages = "engineering.everest.axon.cryptoshredding")
-@EntityScan(basePackages = "engineering.everest.axon.cryptoshredding.persistence")
-@EnableJpaRepositories(basePackages = "engineering.everest.axon.cryptoshredding.persistence")
-@ContextConfiguration(classes = TestsJpaConfig.class)
+@ContextConfiguration(classes = { TestsJpaConfig.class })
+@Execution(SAME_THREAD)
 class CryptoShreddingKeyServiceIntegrationTest {
 
     @Autowired

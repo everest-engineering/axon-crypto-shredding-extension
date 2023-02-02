@@ -24,9 +24,10 @@ ext {
     lombokVersion = '1.18.24'
     springBootVersion = '3.0.2'
 
-    h2Version = '1.4.200'
-    junitVersion = '5.9.0'
-    mockitoVersion = '4.8.0'
+    junitVersion = '5.9.2'
+    mockitoVersion = '5.1.1'
+    postgresDriverVersion = '42.5.1'
+    zonkyEmbeddedDbVersion = '2.2.0'
 }
 
 dependencyManagement {
@@ -50,7 +51,8 @@ dependencies {
     testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
     testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
     testImplementation 'org.springframework:spring-test'
-    testRuntimeOnly "com.h2database:h2:${h2Version}"
+    testImplementation "org.postgresql:postgresql:${postgresDriverVersion}"
+    testImplementation "io.zonky.test:embedded-database-spring-test:${zonkyEmbeddedDbVersion}"
 }
 
 java {
