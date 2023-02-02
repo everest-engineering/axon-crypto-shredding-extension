@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static com.google.common.base.Defaults.defaultValue;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -121,7 +120,7 @@ public class CryptoShreddingSerializer implements Serializer {
     private List<Field> getEncryptedFields(List<Field> fields) {
         return fields.stream()
             .filter(field -> field.getAnnotation(EncryptedField.class) != null)
-            .collect(toList());
+            .toList();
     }
 
     private Map<String, SecretKey> retrieveOrCreateSecretKeysForSerialization(Object object, List<Field> fields) {
@@ -177,7 +176,7 @@ public class CryptoShreddingSerializer implements Serializer {
     private List<Field> findSecretKeyIdentifierFields(List<Field> fields) {
         return fields.stream()
             .filter(field -> field.getAnnotation(EncryptionKeyIdentifier.class) != null)
-            .collect(toList());
+            .toList();
     }
 
     private TypeDifferentiatedSecretKeyId extractSecretKeyIdentifier(Object object, Field secretKeyIdentifierField) {
