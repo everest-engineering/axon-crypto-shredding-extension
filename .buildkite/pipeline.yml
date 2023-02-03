@@ -10,7 +10,7 @@ if-main-branch: &if-main-branch
 steps:
   - label: ':hammer: Build & test'
     agents:
-      java: 11
+      java: 17
     commands:
       - ./gradlew build --console plain
 
@@ -18,7 +18,7 @@ steps:
     <<: *if-our-repo
     <<: *if-main-branch
     agents:
-      java: 11
+      java: 17
     commands:
       - ./gradlew clean sonarqube --console plain
 
@@ -29,7 +29,7 @@ steps:
     <<: *if-release
     key: mavencentral-publish
     agents:
-      java: 11
+      java: 17
     commands:
       - git fetch --tags
       - ./gradlew publishReleasePublicationToMavenCentralRepository --console plain
