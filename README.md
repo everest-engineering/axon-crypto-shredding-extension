@@ -66,10 +66,22 @@ Gradle:
 implementation "engineering.everest.axon:crypto-shredding-extension:${version}"
 ```
 
+Then configure your event serialiser to be wrapped by the crypto-shredding serializer:
+
+```java
+@Bean
+public CryptoShreddingSerializer eventSerializer(CryptoShreddingKeyService cryptoShreddingKeyService,
+                                                 EncrypterDecrypterFactory aesEncrypterDecrypterFactory,
+                                                 DefaultValueProvider defaultValueProvider) {
+     return new CryptoShreddingSerializer(JacksonSerializer.defaultSerializer(),
+        cryptoShreddingKeyService, aesEncrypterDecrypterFactory, new ObjectMapper(), defaultValueProvider);
+}
+```
+
+
 ## License
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-
 [![License: EverestEngineering](https://img.shields.io/badge/Copyright%20%C2%A9-EVERESTENGINEERING-blue)](https://everest.engineering)
 
 > Talk to us `hi@everest.engineering`.

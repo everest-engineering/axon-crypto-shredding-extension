@@ -19,7 +19,6 @@ version = gitTagVersion.commitDistance == 0
 
 ext {
     axonVersion = '4.7.1'
-    guavaVersion = '31.1-jre'
     jacksonVersion = '2.13.1'
     lombokVersion = '1.18.24'
     springBootVersion = '3.0.2'
@@ -42,12 +41,12 @@ dependencies {
     implementation "org.axonframework:axon-modelling:${axonVersion}"
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    implementation "com.google.guava:guava:${guavaVersion}"
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
     testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:${junitVersion}"
     testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
     testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
     testImplementation 'org.springframework:spring-test'

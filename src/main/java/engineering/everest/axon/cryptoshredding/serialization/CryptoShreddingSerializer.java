@@ -1,7 +1,9 @@
-package engineering.everest.axon.cryptoshredding;
+package engineering.everest.axon.cryptoshredding.serialization;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import engineering.everest.axon.cryptoshredding.CryptoShreddingKeyService;
+import engineering.everest.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
 import engineering.everest.axon.cryptoshredding.annotations.EncryptedField;
 import engineering.everest.axon.cryptoshredding.annotations.EncryptionKeyIdentifier;
 import engineering.everest.axon.cryptoshredding.encryption.EncrypterDecrypterFactory;
@@ -30,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.google.common.base.Defaults.defaultValue;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -50,15 +51,18 @@ public class CryptoShreddingSerializer implements Serializer {
     private final CryptoShreddingKeyService cryptoShreddingKeyService;
     private final EncrypterDecrypterFactory encrypterDecrypterFactory;
     private final ObjectMapper objectMapper;
+    private final DefaultValueProvider defaultValueProvider;
 
     public CryptoShreddingSerializer(@Qualifier("eventSerializer") Serializer wrappedSerializer,
                                      CryptoShreddingKeyService cryptoShreddingKeyService,
                                      EncrypterDecrypterFactory encrypterDecrypterFactory,
-                                     ObjectMapper objectMapper) {
+                                     ObjectMapper objectMapper,
+                                     DefaultValueProvider defaultValueProvider) {
         this.wrappedSerializer = wrappedSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
         this.encrypterDecrypterFactory = encrypterDecrypterFactory;
         this.objectMapper = objectMapper;
+        this.defaultValueProvider = defaultValueProvider;
     }
 
     @Override
@@ -245,7 +249,7 @@ public class CryptoShreddingSerializer implements Serializer {
                     new SimpleSerializedObject<>(cleartextSerializedFieldValue, String.class, Object.class.getCanonicalName(), null));
                 encryptedMappedObject.put(serializedFieldKey, deserializedFieldValue);
             } else {
-                encryptedMappedObject.put(serializedFieldKey, defaultValue(field.getType()));
+                encryptedMappedObject.put(serializedFieldKey, defaultValueProvider.defaultValue(field.getType()));
             }
         });
 
