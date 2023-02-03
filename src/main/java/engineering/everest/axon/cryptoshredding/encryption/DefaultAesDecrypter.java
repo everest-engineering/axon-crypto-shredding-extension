@@ -13,7 +13,7 @@ import java.security.SecureRandom;
 
 import static javax.crypto.Cipher.DECRYPT_MODE;
 
-class DefaultAesDecrypter implements Decrypter {
+public class DefaultAesDecrypter implements Decrypter {
 
     private static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     private static final int INITIALIZATION_VECTOR_LENGTH_BYTES = 12;

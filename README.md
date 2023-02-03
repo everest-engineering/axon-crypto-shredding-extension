@@ -1,7 +1,7 @@
 # Crypro shredding extensions for Axon
 
-[![test](https://maven-badges.herokuapp.com/maven-central/engineering.everest.axon/crypto-shredding-extension/badge.svg)](https://maven-badges.herokuapp.com/maven-central/engineering.everest.axon/crypto-shredding-extension) 
-[![Build status](https://badge.buildkite.com/a6ee63e1007ea8475194fe1dea40c821d9cd7129a40397365f.svg?branch=main)](https://buildkite.com/everest-engineering/axon-crypto-shredding-extension) 
+[![test](https://maven-badges.herokuapp.com/maven-central/engineering.everest.axon/crypto-shredding-extension/badge.svg)](https://maven-badges.herokuapp.com/maven-central/engineering.everest.axon/crypto-shredding-extension)
+[![Build status](https://badge.buildkite.com/a6ee63e1007ea8475194fe1dea40c821d9cd7129a40397365f.svg?branch=main)](https://buildkite.com/everest-engineering/axon-crypto-shredding-extension)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=everest-engineering_axon-crypto-shredding-extension&metric=alert_status)](https://sonarcloud.io/dashboard?id=everest-engineering_axon-crypto-shredding-extension)
 
 This is a **standalone library** as well as a supporting repository

@@ -14,7 +14,7 @@ import java.security.SecureRandom;
 import static java.lang.System.arraycopy;
 import static javax.crypto.Cipher.ENCRYPT_MODE;
 
-class DefaultAesEncrypter implements Encrypter {
+public class DefaultAesEncrypter implements Encrypter {
 
     private static final String CIPHER_ALGORITHM = "AES/GCM/NoPadding";
     private static final int INITIALIZATION_VECTOR_LENGTH_BYTES = 12;

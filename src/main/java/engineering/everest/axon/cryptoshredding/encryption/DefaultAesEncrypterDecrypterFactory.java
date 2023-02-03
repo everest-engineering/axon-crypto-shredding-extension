@@ -2,7 +2,7 @@ package engineering.everest.axon.cryptoshredding.encryption;
 
 import java.security.SecureRandom;
 
-class DefaultAesEncrypterDecrypterFactory implements EncrypterDecrypterFactory {
+public class DefaultAesEncrypterDecrypterFactory implements EncrypterDecrypterFactory {
 
     private final SecureRandom secureRandom;
 

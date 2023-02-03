@@ -5,7 +5,7 @@ import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-class DefaultAesKeyGenerator implements engineering.everest.axon.cryptoshredding.encryption.KeyGenerator {
+public class DefaultAesKeyGenerator implements engineering.everest.axon.cryptoshredding.encryption.KeyGenerator {
     public static final String ALGORITHM = "AES";
     private static final int KEY_SIZE = 256;
 
