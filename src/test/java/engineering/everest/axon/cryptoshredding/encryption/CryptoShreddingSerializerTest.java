@@ -13,6 +13,9 @@ import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncrypti
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
 import engineering.everest.axon.cryptoshredding.serialization.KeyIdentifierToStringConverter;
+import engineering.everest.axon.cryptoshredding.testevents.CustomType;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithCustomTypeAsEncryptedField;
+import engineering.everest.axon.cryptoshredding.testevents.EventWithCustomTypeForKeyIdentifier;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithEncryptedFields;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithMismatchedMultipleEncryptionKeyIdentifierTags;
@@ -100,6 +103,23 @@ class CryptoShreddingSerializerTest {
         var serialized = jsonCryptoShreddingSerializer.serialize(EventWithEncryptedFields.createTestInstance(), byte[].class);
 
         assertEquals(new SimpleSerializedType(EventWithEncryptedFields.class.getCanonicalName(), "0"), serialized.getType());
+    }
+
+    @Test
+    void serialize_WillUseCustomKeyIdentifierConversionFunction_WhenConversionFunctionRegistered() {
+        var customKeyIdentifierToStringConverter = KeyIdentifierToStringConverter.builder()
+            .customConverter(CustomType.class, object -> ((CustomType) object).getWrappedId())
+            .build();
+
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+
+        jsonCryptoShreddingSerializer = new CryptoShreddingSerializer(
+            JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService, encrypterFactory, new ObjectMapper(),
+            new DefaultValueProvider(), customKeyIdentifierToStringConverter);
+
+        var serialized = jsonCryptoShreddingSerializer.serialize(EventWithCustomTypeForKeyIdentifier.createTestInstance(), byte[].class);
+        assertEquals(new SimpleSerializedType(EventWithCustomTypeForKeyIdentifier.class.getCanonicalName(), "0"), serialized.getType());
     }
 
     @Test
@@ -222,6 +242,32 @@ class CryptoShreddingSerializerTest {
         EventWithEncryptedFields deserialized = jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
 
         assertEquals(EventWithEncryptedFields.createUnencryptedTestInstance(), deserialized);
+    }
+
+    @Test
+    void deserialize_WillUseCustomDefaultValue_WhenRegisteredAndEncryptionKeyHasBeenDeleted() {
+        when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
+        when(cryptoShreddingKeyService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.empty());
+        when(encrypterFactory.createEncrypter()).thenReturn(defaultAesEncrypter);
+
+        var customDefaultProvider = DefaultValueProvider.builder()
+            .customType(CustomType.class, new CustomType("custom default value"))
+            .build();
+
+        jsonCryptoShreddingSerializer = new CryptoShreddingSerializer(
+            JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService, encrypterFactory, new ObjectMapper(),
+            customDefaultProvider, new KeyIdentifierToStringConverter());
+
+        var serializedAndEncryptedEvent =
+            jsonCryptoShreddingSerializer.serialize(EventWithCustomTypeAsEncryptedField.createTestInstance(), byte[].class);
+
+        SimpleSerializedObject<byte[]> typeInformationAugmentedEncryptedEvent =
+            new SimpleSerializedObject<>(serializedAndEncryptedEvent.getData(), byte[].class,
+                new SimpleSerializedType(EventWithCustomTypeAsEncryptedField.class.getCanonicalName(), REVISION_NUMBER));
+        EventWithCustomTypeAsEncryptedField deserialized =
+            jsonCryptoShreddingSerializer.deserialize(typeInformationAugmentedEncryptedEvent);
+
+        assertEquals(EventWithCustomTypeAsEncryptedField.createCryptoShreddedUnencryptedTestInstance(), deserialized);
     }
 
     @Test
