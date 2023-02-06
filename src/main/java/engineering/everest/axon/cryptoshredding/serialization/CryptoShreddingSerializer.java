@@ -12,7 +12,6 @@ import engineering.everest.axon.cryptoshredding.exceptions.EncryptionKeyDeletedE
 import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyIdentifierAnnotationException;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncryptionKeyIdentifierFieldException;
 import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncryptionKeyIdentifierException;
-import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.common.ObjectUtils;
 import org.axonframework.serialization.Converter;
@@ -30,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -52,17 +50,20 @@ public class CryptoShreddingSerializer implements Serializer {
     private final EncrypterDecrypterFactory encrypterDecrypterFactory;
     private final ObjectMapper objectMapper;
     private final DefaultValueProvider defaultValueProvider;
+    private final KeyIdentifierToStringConverter keyIdentifierToStringConverter;
 
     public CryptoShreddingSerializer(@Qualifier("eventSerializer") Serializer wrappedSerializer,
                                      CryptoShreddingKeyService cryptoShreddingKeyService,
                                      EncrypterDecrypterFactory encrypterDecrypterFactory,
                                      ObjectMapper objectMapper,
-                                     DefaultValueProvider defaultValueProvider) {
+                                     DefaultValueProvider defaultValueProvider,
+                                     KeyIdentifierToStringConverter keyIdentifierToStringConverter) {
         this.wrappedSerializer = wrappedSerializer;
         this.cryptoShreddingKeyService = cryptoShreddingKeyService;
         this.encrypterDecrypterFactory = encrypterDecrypterFactory;
         this.objectMapper = objectMapper;
         this.defaultValueProvider = defaultValueProvider;
+        this.keyIdentifierToStringConverter = keyIdentifierToStringConverter;
     }
 
     @Override
@@ -187,18 +188,11 @@ public class CryptoShreddingSerializer implements Serializer {
         secretKeyIdentifierField.setAccessible(true);
         try {
             return new TypeDifferentiatedSecretKeyId(
-                convertToString(secretKeyIdentifierField.get(object)),
+                keyIdentifierToStringConverter.convertToString(secretKeyIdentifierField.get(object)),
                 secretKeyIdentifierField.getAnnotation(EncryptionKeyIdentifier.class).keyType());
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private String convertToString(Object object) {
-        if (object instanceof String || object instanceof UUID || object instanceof Long || object instanceof Integer) {
-            return object.toString();
-        }
-        throw new UnsupportedEncryptionKeyIdentifierTypeException(object.toString());
     }
 
     private Map<String, Object> mapAndEncryptAnnotatedFields(Object object,

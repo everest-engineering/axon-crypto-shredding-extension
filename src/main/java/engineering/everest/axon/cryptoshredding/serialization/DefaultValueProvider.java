@@ -5,6 +5,10 @@ import java.util.Map;
 
 import static java.lang.Boolean.FALSE;
 
+/**
+ * Provides default values for fields that can no longer be decrypted. <br>
+ * Support for custom types can be registered using the builder.
+ */
 public class DefaultValueProvider {
 
     private static final Double DOUBLE_0 = 0d;
@@ -16,12 +20,12 @@ public class DefaultValueProvider {
         this.customDefaultValueTypes = new HashMap<>();
     }
 
-    private DefaultValueProvider(DefaultValueProviderBuilder builder) {
+    private DefaultValueProvider(Builder builder) {
         this.customDefaultValueTypes = builder.customDefaultValueTypes;
     }
 
-    public static DefaultValueProviderBuilder builder() {
-        return new DefaultValueProviderBuilder();
+    public static Builder builder() {
+        return new Builder();
     }
 
     public <T> T defaultValue(Class<T> clazz) {
@@ -52,14 +56,14 @@ public class DefaultValueProvider {
         return (T) customDefaultValueTypes.get(clazz);
     }
 
-    public static class DefaultValueProviderBuilder {
+    public static class Builder {
         private final Map<Class<?>, Object> customDefaultValueTypes;
 
-        public DefaultValueProviderBuilder() {
+        public Builder() {
             this.customDefaultValueTypes = new HashMap<>();
         }
 
-        public <T> DefaultValueProviderBuilder customType(Class<T> clazz, Object defaultValue) {
+        public <T> Builder customType(Class<T> clazz, Object defaultValue) {
             customDefaultValueTypes.put(clazz, defaultValue);
             return this;
         }

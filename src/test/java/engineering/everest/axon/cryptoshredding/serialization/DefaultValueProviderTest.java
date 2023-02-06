@@ -1,6 +1,5 @@
-package engineering.everest.axon.cryptoshredding;
+package engineering.everest.axon.cryptoshredding.serialization;
 
-import engineering.everest.axon.cryptoshredding.serialization.DefaultValueProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

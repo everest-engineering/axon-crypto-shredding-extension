@@ -5,6 +5,7 @@ import engineering.everest.axon.cryptoshredding.encryption.DefaultAesKeyGenerato
 import engineering.everest.axon.cryptoshredding.encryption.EncrypterDecrypterFactory;
 import engineering.everest.axon.cryptoshredding.encryption.KeyGenerator;
 import engineering.everest.axon.cryptoshredding.serialization.DefaultValueProvider;
+import engineering.everest.axon.cryptoshredding.serialization.KeyIdentifierToStringConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,5 +31,11 @@ public class AxonCryptoShreddingAutoConfiguration {
     @ConditionalOnMissingBean(DefaultValueProvider.class)
     public DefaultValueProvider defaultValueProvider() {
         return new DefaultValueProvider();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(KeyIdentifierToStringConverter.class)
+    public KeyIdentifierToStringConverter keyIdentifierToStringConverter() {
+        return new KeyIdentifierToStringConverter();
     }
 }

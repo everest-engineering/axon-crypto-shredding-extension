@@ -12,6 +12,7 @@ import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncr
 import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncryptionKeyIdentifierException;
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
+import engineering.everest.axon.cryptoshredding.serialization.KeyIdentifierToStringConverter;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithDifferentiatedKeyType;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithEncryptedFields;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithMismatchedMultipleEncryptionKeyIdentifierTags;
@@ -71,10 +72,11 @@ class CryptoShreddingSerializerTest {
     @BeforeEach
     void setUp() {
         cryptoShreddingSerializerWithMock = new CryptoShreddingSerializer(
-            mockWrappedSerializer, cryptoShreddingKeyService, encrypterFactory, new ObjectMapper(), new DefaultValueProvider());
+            mockWrappedSerializer, cryptoShreddingKeyService, encrypterFactory, new ObjectMapper(), new DefaultValueProvider(),
+            new KeyIdentifierToStringConverter());
         jsonCryptoShreddingSerializer = new CryptoShreddingSerializer(
             JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService, encrypterFactory, new ObjectMapper(),
-            new DefaultValueProvider());
+            new DefaultValueProvider(), new KeyIdentifierToStringConverter());
         var secureRandom = new SecureRandom();
         defaultAesEncrypter = new DefaultAesEncrypter(secureRandom);
         defaultAesDecrypter = new DefaultAesDecrypter(secureRandom);
@@ -189,7 +191,7 @@ class CryptoShreddingSerializerTest {
     @Test
     void deserialize_WillDecryptEventsSerializedByXmlCryptoShreddingSerializer_WhenEventContainsEncryptedFields() {
         var xmlCryptoShreddingSerializer = new CryptoShreddingSerializer(XStreamSerializer.defaultSerializer(), cryptoShreddingKeyService,
-            encrypterFactory, new ObjectMapper(), new DefaultValueProvider());
+            encrypterFactory, new ObjectMapper(), new DefaultValueProvider(), new KeyIdentifierToStringConverter());
 
         when(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
         when(cryptoShreddingKeyService.getExistingSecretKey(KEY_IDENTIFIER)).thenReturn(Optional.of(ENCRYPTION_KEY));
