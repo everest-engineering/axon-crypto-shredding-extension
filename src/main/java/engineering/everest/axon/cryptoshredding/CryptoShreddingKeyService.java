@@ -72,14 +72,14 @@ public class CryptoShreddingKeyService {
     }
 
     /**
-     * Delete a secret key, rendering all fields protected by this key inaccessible.
+     * Shred a secret key, rendering all fields protected by this key inaccessible.
      * <p>
      * <b>The encryption key table should not modified directly</b>.
      *
      * @param keyId that uniquely identifies the key
      */
     @Transactional(propagation = NOT_SUPPORTED)
-    public void deleteSecretKey(TypeDifferentiatedSecretKeyId keyId) {
+    public void shredSecretKey(TypeDifferentiatedSecretKeyId keyId) {
         var optionalSecretKey = secretKeyRepository.findById(keyId);
         var secretKey = optionalSecretKey.orElseThrow(() -> new MissingEncryptionKeyRecordException(keyId.getKeyId(), keyId.getKeyType()));
         if (secretKey.getKey() != null || secretKey.getAlgorithm() != null) {

@@ -46,7 +46,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
     void getOrCreateSecretKeyUnlessDeleted_WillReturnEmptyOptional_WhenKeyHasBeenDeleted() {
         var keyId = generateKeyId();
         cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
-        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        cryptoShreddingKeyService.shredSecretKey(keyId);
 
         assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId).isEmpty());
     }
@@ -69,7 +69,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
     void getExistingSecretKey_WillReturnEmptyOptional_WhenKeyPreviouslyCreatedAndDeleted() {
         var keyId = generateKeyId();
         cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
-        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        cryptoShreddingKeyService.shredSecretKey(keyId);
 
         assertEquals(Optional.empty(), cryptoShreddingKeyService.getExistingSecretKey(keyId));
     }
@@ -90,7 +90,7 @@ class CryptoShreddingKeyServiceIntegrationTest {
     void secretKeyExists_WillReturnTrueIfKeyCreatedAndDeleted() {
         var keyId = generateKeyId();
         cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
-        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        cryptoShreddingKeyService.shredSecretKey(keyId);
         assertTrue(cryptoShreddingKeyService.secretKeyExists(keyId));
     }
 
@@ -98,15 +98,15 @@ class CryptoShreddingKeyServiceIntegrationTest {
     void keysAreIdempotentlyDeleted() {
         var keyId = generateKeyId();
         cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
-        cryptoShreddingKeyService.deleteSecretKey(keyId);
-        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        cryptoShreddingKeyService.shredSecretKey(keyId);
+        cryptoShreddingKeyService.shredSecretKey(keyId);
 
         assertTrue(cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId).isEmpty());
     }
 
     @Test
     void deletingANonExistentKey_WillFail() {
-        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.deleteSecretKey(
+        assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.shredSecretKey(
             new TypeDifferentiatedSecretKeyId("does not exist", "")));
     }
 
