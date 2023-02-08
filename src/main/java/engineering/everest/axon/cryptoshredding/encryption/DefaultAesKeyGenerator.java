@@ -9,13 +9,11 @@ public class DefaultAesKeyGenerator implements engineering.everest.axon.cryptosh
     private static final String ALGORITHM = "AES";
     private static final int KEY_SIZE = 256;
 
-    private final SecureRandom securerandom;
     private final KeyGenerator keygenerator;
 
     public DefaultAesKeyGenerator() throws NoSuchAlgorithmException {
-        this.securerandom = new SecureRandom();
         this.keygenerator = KeyGenerator.getInstance(ALGORITHM);
-        this.keygenerator.init(KEY_SIZE, this.securerandom);
+        this.keygenerator.init(KEY_SIZE, new SecureRandom());
     }
 
     public SecretKey generateKey() {

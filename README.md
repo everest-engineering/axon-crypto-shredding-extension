@@ -72,9 +72,10 @@ Then configure your event serialiser to be wrapped by the crypto-shredding seria
 @Bean
 public CryptoShreddingSerializer eventSerializer(CryptoShreddingKeyService cryptoShreddingKeyService,
                                                  EncrypterDecrypterFactory aesEncrypterDecrypterFactory,
-                                                 DefaultValueProvider defaultValueProvider) {
-     return new CryptoShreddingSerializer(JacksonSerializer.defaultSerializer(),
-        cryptoShreddingKeyService, aesEncrypterDecrypterFactory, new ObjectMapper(), defaultValueProvider);
+                                                 DefaultValueProvider defaultValueProvider,
+                                                 KeyIdentifierToStringConverter keyIdentifierToStringConverter) {
+     return new CryptoShreddingSerializer(JacksonSerializer.defaultSerializer(), cryptoShreddingKeyService,
+        aesEncrypterDecrypterFactory, new ObjectMapper(), defaultValueProvider, keyIdentifierToStringConverter);
 }
 ```
 
