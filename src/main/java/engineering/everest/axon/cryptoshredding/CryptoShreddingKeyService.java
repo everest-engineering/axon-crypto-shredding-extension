@@ -46,10 +46,20 @@ public class CryptoShreddingKeyService {
     }
 
     /**
+     * Check if a secret key exists
+     *
+     * @param  keyId that uniquely identifies the key
+     * @return       true if the key was previously created <b>even if it has been deleted</b>, false if it was never created
+     */
+    public boolean secretKeyExists(TypeDifferentiatedSecretKeyId keyId) {
+        return secretKeyRepository.findById(keyId).isPresent();
+    }
+
+    /**
      * Retrieve an existing secret key.
      *
      * @param  keyId that uniquely identifies the key
-     * @return       an optional secret key
+     * @return       an optional secret key which will be empty if the key previously existed but has been deleted
      */
     @Transactional(propagation = NOT_SUPPORTED)
     public Optional<SecretKey> getExistingSecretKey(TypeDifferentiatedSecretKeyId keyId) {

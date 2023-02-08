@@ -17,6 +17,7 @@ import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.DatabaseType.POSTGR
 import static io.zonky.test.db.AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_EACH_TEST_METHOD;
 import static java.util.UUID.randomUUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
@@ -61,7 +62,6 @@ class CryptoShreddingKeyServiceIntegrationTest {
 
     @Test
     void getExistingSecretKey_WillFailWhenKeyNotCreated() {
-
         assertThrows(MissingEncryptionKeyRecordException.class, () -> cryptoShreddingKeyService.getExistingSecretKey(generateKeyId()));
     }
 
@@ -72,6 +72,26 @@ class CryptoShreddingKeyServiceIntegrationTest {
         cryptoShreddingKeyService.deleteSecretKey(keyId);
 
         assertEquals(Optional.empty(), cryptoShreddingKeyService.getExistingSecretKey(keyId));
+    }
+
+    @Test
+    void secretKeyExists_WillReturnFalseIfKeyNeverCreated() {
+        assertFalse(cryptoShreddingKeyService.secretKeyExists(generateKeyId()));
+    }
+
+    @Test
+    void secretKeyExists_WillReturnTrueIfKeyCreated() {
+        var keyId = generateKeyId();
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        assertTrue(cryptoShreddingKeyService.secretKeyExists(keyId));
+    }
+
+    @Test
+    void secretKeyExists_WillReturnTrueIfKeyCreatedAndDeleted() {
+        var keyId = generateKeyId();
+        cryptoShreddingKeyService.getOrCreateSecretKeyUnlessDeleted(keyId);
+        cryptoShreddingKeyService.deleteSecretKey(keyId);
+        assertTrue(cryptoShreddingKeyService.secretKeyExists(keyId));
     }
 
     @Test
