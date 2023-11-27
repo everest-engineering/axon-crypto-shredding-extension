@@ -1,16 +1,14 @@
 package engineering.everest.axon.cryptoshredding.persistence;
 
 import engineering.everest.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import javax.crypto.SecretKey;
+import java.util.Optional;
 
-@Repository
-public interface SecretKeyRepository extends JpaRepository<PersistableSecretKey, TypeDifferentiatedSecretKeyId> {
+public interface SecretKeyRepository {
+    PersistableSecretKey create(TypeDifferentiatedSecretKeyId keyId, SecretKey key);
 
-    default SecretKey create(TypeDifferentiatedSecretKeyId keyId, SecretKey key) {
-        save(new PersistableSecretKey(keyId, key.getEncoded(), key.getAlgorithm()));
-        return key;
-    }
+    Optional<PersistableSecretKey> findById(TypeDifferentiatedSecretKeyId keyId);
+
+    PersistableSecretKey save(PersistableSecretKey key);
 }

@@ -40,7 +40,9 @@ public class CryptoShreddingKeyService {
         var optionalPersistableSecretKey = secretKeyRepository.findById(keyId);
         if (optionalPersistableSecretKey.isEmpty()) {
             LOGGER.trace("Creating crypto shredding key {}", keyId.toString());
-            return Optional.of(secretKeyRepository.create(keyId, secretKeyGenerator.generateKey()));
+            var secretKey = secretKeyGenerator.generateKey();
+            secretKeyRepository.create(keyId, secretKey);
+            return Optional.of(secretKey);
         }
         return createSecretKeyOrEmptyOptional(optionalPersistableSecretKey.get());
     }

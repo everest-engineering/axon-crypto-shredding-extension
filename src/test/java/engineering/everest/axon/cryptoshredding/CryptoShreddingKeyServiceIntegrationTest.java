@@ -1,7 +1,6 @@
 package engineering.everest.axon.cryptoshredding;
 
 import engineering.everest.axon.cryptoshredding.exceptions.MissingEncryptionKeyRecordException;
-import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -9,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Optional;
@@ -25,13 +25,12 @@ import static org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD;
 @AutoConfigureEmbeddedDatabase(refresh = AFTER_EACH_TEST_METHOD, type = POSTGRES)
 @DataJpaTest
 @EnableAutoConfiguration
+@EnableJpaRepositories
 @ComponentScan(basePackages = "engineering.everest.axon.cryptoshredding")
 @ContextConfiguration(classes = { TestsJpaConfig.class })
 @Execution(SAME_THREAD)
 class CryptoShreddingKeyServiceIntegrationTest {
 
-    @Autowired
-    private SecretKeyRepository secretKeyRepository;
     @Autowired
     private CryptoShreddingKeyService cryptoShreddingKeyService;
 

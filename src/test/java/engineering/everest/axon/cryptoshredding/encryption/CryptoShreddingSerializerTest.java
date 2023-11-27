@@ -2,8 +2,6 @@ package engineering.everest.axon.cryptoshredding.encryption;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import engineering.everest.axon.cryptoshredding.CryptoShreddingKeyService;
-import engineering.everest.axon.cryptoshredding.serialization.CryptoShreddingSerializer;
-import engineering.everest.axon.cryptoshredding.serialization.DefaultValueProvider;
 import engineering.everest.axon.cryptoshredding.TypeDifferentiatedSecretKeyId;
 import engineering.everest.axon.cryptoshredding.exceptions.DuplicateEncryptionKeyIdentifierFieldTagException;
 import engineering.everest.axon.cryptoshredding.exceptions.EncryptionKeyDeletedException;
@@ -12,6 +10,8 @@ import engineering.everest.axon.cryptoshredding.exceptions.MissingSerializedEncr
 import engineering.everest.axon.cryptoshredding.exceptions.MissingTaggedEncryptionKeyIdentifierException;
 import engineering.everest.axon.cryptoshredding.exceptions.UnsupportedEncryptionKeyIdentifierTypeException;
 import engineering.everest.axon.cryptoshredding.persistence.SecretKeyRepository;
+import engineering.everest.axon.cryptoshredding.serialization.CryptoShreddingSerializer;
+import engineering.everest.axon.cryptoshredding.serialization.DefaultValueProvider;
 import engineering.everest.axon.cryptoshredding.serialization.KeyIdentifierToStringConverter;
 import engineering.everest.axon.cryptoshredding.testevents.CustomType;
 import engineering.everest.axon.cryptoshredding.testevents.EventWithCustomTypeAsEncryptedField;
