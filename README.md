@@ -51,7 +51,6 @@ do not align with the types declared for an event or saga.
 
 Maven:
 
-
 ```xml
 <dependency>
   <groupId>engineering.everest.axon</groupId>
@@ -65,8 +64,8 @@ Gradle:
 ```
 implementation "engineering.everest.axon:crypto-shredding-extension:${version}"
 ```
-
-Then configure your event serialiser to be wrapped by the crypto-shredding serializer:
+1. Add implementation for `SecretKeyRepository` to persist the secret keys. Default implementation `DefaultSecretKeyRepository` can found [here](https://github.com/everest-engineering/lhotse)
+2. configure your event serializer to be wrapped by the crypto-shredding serializer:
 
 ```java
 @Bean
